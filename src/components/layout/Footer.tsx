@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from '@/components/layout/Logo'
 import { categoryHref, siteConfig } from '@/lib/site'
 
 const accountLinks = [
@@ -14,8 +15,8 @@ export function Footer() {
     <footer className="bg-brand-950 text-primary-foreground print:hidden">
       <div className="container mx-auto px-4 py-16 grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
         <div className="max-w-sm space-y-4">
-          <Link href="/" className="font-serif text-3xl font-semibold">
-            {siteConfig.name}
+          <Link href="/" className="text-3xl">
+            <Logo />
           </Link>
           <p className="text-primary-foreground/70 leading-relaxed">
             {siteConfig.tagline} {siteConfig.description}

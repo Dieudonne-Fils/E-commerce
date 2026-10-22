@@ -6,8 +6,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { BarChart3, LayoutDashboard, LogOut, Package, ShoppingCart, Store, Users } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Loading } from '@/components/ui/Loading'
+import { Logo } from '@/components/layout/Logo'
 import { useAuth } from '@/contexts/AuthContext'
-import { siteConfig } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 const ADMIN_NAV = [
@@ -32,7 +32,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return (
       <main className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl border border-border bg-white p-8 text-center">
-          <p className="font-serif text-2xl font-semibold">{siteConfig.name}</p>
+          <Logo className="text-2xl" />
           <h1 className="mt-6 text-3xl">{user ? 'Access denied' : 'Please sign in'}</h1>
           <p className="mt-3 text-muted-foreground">
             {user ? 'Your account does not have access to the admin area.' : 'Sign in with an admin account to manage the store.'}
@@ -55,7 +55,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <aside className="border-b border-border bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-4 lg:px-6 lg:py-6">
           <Link href="/admin" className="flex items-center gap-2">
-            <span className="font-serif text-2xl font-semibold">{siteConfig.name}</span>
+            <Logo className="text-2xl" />
             <span className="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">Admin</span>
           </Link>
           <div className="flex items-center gap-1 lg:hidden">

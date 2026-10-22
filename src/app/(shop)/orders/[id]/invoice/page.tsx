@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { ArrowLeft, Printer } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Loading } from '@/components/ui/Loading'
+import { Logo } from '@/components/layout/Logo'
 import { useAuth } from '@/contexts/AuthContext'
 import { useOrder } from '@/hooks/useOrder'
 import { siteConfig } from '@/lib/site'
@@ -65,7 +66,7 @@ export default function InvoicePage() {
       <article className="rounded-3xl border border-border bg-white p-6 sm:p-12 print:rounded-none print:border-0 print:p-0">
         <header className="flex flex-wrap items-start justify-between gap-6 border-b border-border pb-8">
           <div>
-            <p className="font-serif text-3xl font-semibold">{siteConfig.name}</p>
+            <Logo className="text-3xl" />
             <p className="mt-1 text-sm text-muted-foreground">{siteConfig.tagline}</p>
           </div>
           <div className="sm:text-right">

@@ -1,8 +1,9 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Fraunces, Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
+import { brandBlue } from '@/lib/brand'
 import { siteConfig } from '@/lib/site'
 import './globals.css'
 
@@ -15,6 +16,11 @@ export const metadata: Metadata = {
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+}
+
+// Tints the mobile browser bar with the brand blue
+export const viewport: Viewport = {
+  themeColor: brandBlue[600],
 }
 
 export default function RootLayout({

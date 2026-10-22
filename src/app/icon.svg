@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Oakline mark: an "O" resting on a line. Also used by the Logo component and the PNG app icons -->
+  <rect width="32" height="32" rx="8" fill="#2563eb"/>
+  <circle cx="16" cy="14" r="6.5" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <rect x="8.5" y="23" width="15" height="2.75" rx="1.375" fill="#ffffff"/>
+</svg>

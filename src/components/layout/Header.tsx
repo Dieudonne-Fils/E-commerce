@@ -6,6 +6,7 @@ import { Heart, LogOut, Menu, Search, ShoppingBag, User, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { SearchBox } from '@/components/ui/SearchBox'
 import { QuickSearch } from '@/components/ui/QuickSearch'
+import { Logo } from '@/components/layout/Logo'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { categoryHref, siteConfig } from '@/lib/site'
@@ -45,8 +46,8 @@ export function Header() {
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
 
-          <Link href="/" className="font-serif text-2xl font-semibold tracking-tight" onClick={closeMenu}>
-            {siteConfig.name}
+          <Link href="/" className="text-2xl" onClick={closeMenu}>
+            <Logo />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 ml-6 text-sm">
