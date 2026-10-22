@@ -13,7 +13,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const classes = cn(
       'inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
       {
-        'bg-primary text-primary-foreground hover:bg-primary/85': variant === 'default',
+        'bg-primary text-primary-foreground hover:bg-primary-700': variant === 'default',
         'bg-destructive text-destructive-foreground hover:bg-destructive/90': variant === 'destructive',
         'border border-input bg-white text-foreground hover:bg-secondary': variant === 'outline',
         'bg-secondary text-secondary-foreground hover:bg-secondary/70': variant === 'secondary',
