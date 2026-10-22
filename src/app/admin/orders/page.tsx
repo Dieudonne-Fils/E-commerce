@@ -158,6 +158,8 @@ export default function AdminOrdersPage() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
         toast.success('Orders exported successfully')
+      } else {
+        toast.error('Failed to export orders')
       }
     } catch (error) {
       toast.error('Failed to export orders')
