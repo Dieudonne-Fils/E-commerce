@@ -159,7 +159,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 - `GET /api/orders` - Get user's orders
 - `POST /api/orders` - Create a new order
 - `GET /api/orders/[id]` - Get order by ID
-- `PUT /api/orders/[id]` - Update order status (Admin)
+- `PATCH /api/admin/orders/[id]/status` - Update order status (Admin)
 
 ## Database Schema
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { getAdminFromRequest } from '@/lib/auth'
 
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
@@ -46,6 +47,14 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
+    const adminId = await getAdminFromRequest(request)
+    if (!adminId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     const data = updateProductSchema.parse(body)
 
@@ -79,6 +88,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    const adminId = await getAdminFromRequest(request)
+    if (!adminId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     await prisma.product.delete({
       where: { id },
     })
