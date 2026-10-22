@@ -11,7 +11,7 @@ const accountLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="bg-primary text-primary-foreground print:hidden">
       <div className="container mx-auto px-4 py-16 grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
         <div className="max-w-sm space-y-4">
           <Link href="/" className="font-serif text-3xl font-semibold">

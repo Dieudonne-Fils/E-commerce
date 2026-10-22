@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Order } from '@/types'
 import { Package, User, Calendar, MapPin } from 'lucide-react'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { user, token } = useAuth()
@@ -142,7 +142,7 @@ export default function ProfilePage() {
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold">{formatPrice(Number(order.total))}</div>
+                        <div className="text-xl font-bold">{formatPrice(priceBreakdown(Number(order.total)).total)}</div>
                         <div className="text-sm text-gray-600">
                           {order.items?.length || 0} item(s)
                         </div>
@@ -175,8 +175,8 @@ export default function ProfilePage() {
                     )}
 
                     <div className="flex justify-end mt-4">
-                      <Button variant="outline" size="sm">
-                        View Details
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/orders/${order.id}`}>View Details</Link>
                       </Button>
                     </div>
                   </div>

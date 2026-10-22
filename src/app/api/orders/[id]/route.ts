@@ -24,8 +24,15 @@ export async function GET(
       include: {
         items: {
           include: {
-            product: true,
+            product: {
+              include: { category: true },
+            },
           },
+        },
+        // Who changed the status stays internal: customers only see what happened and when
+        statusHistory: {
+          select: { id: true, status: true, changedAt: true },
+          orderBy: { changedAt: 'asc' },
         },
       },
     })

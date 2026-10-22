@@ -20,7 +20,7 @@ export function Header() {
   const closeMenu = () => setIsMenuOpen(false)
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 print:hidden">
       <div className="bg-primary text-primary-foreground">
         <p className="container mx-auto px-4 py-2 text-center text-xs tracking-wide">
           {siteConfig.perks.map((perk, index) => (
