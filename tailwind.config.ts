@@ -1,5 +1,16 @@
 import type { Config } from 'tailwindcss'
 
+// The store's original blue. 600 keeps 5.2:1 contrast on white (white labels and small text stay readable);
+// 950 is the deep navy used for large surfaces such as the footer
+const blue = {
+  50: '#eff6ff',
+  100: '#dbeafe',
+  500: '#3b82f6',
+  600: '#2563eb',
+  700: '#1d4ed8',
+  950: '#172554',
+}
+
 const config: Config = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -15,27 +26,16 @@ const config: Config = {
       colors: {
         border: '#e7e2da',
         input: '#ddd6cc',
-        ring: '#1c1917',
+        ring: blue[600],
         background: '#faf8f5',
         foreground: '#1c1917',
-        // Ink: the brand's neutral, used for primary actions, prices and links
+        // Actions (buttons, active filters, announcement bar) and highlights share the same blue
         primary: {
-          DEFAULT: '#1c1917',
-          foreground: '#faf8f5',
-          50: '#f6f3ee',
-          100: '#ede7de',
-          500: '#57534e',
-          600: '#292524',
-          700: '#1c1917',
+          DEFAULT: blue[600],
+          foreground: '#ffffff',
+          ...blue,
         },
-        // Clay: the single accent, reserved for highlights (badges, ratings, sale cues)
-        clay: {
-          50: '#fbf3ee',
-          100: '#f6e3d8',
-          500: '#c8643b',
-          600: '#b4532a',
-          700: '#923f1d',
-        },
+        brand: blue,
         secondary: {
           DEFAULT: '#f1ece4',
           foreground: '#1c1917',

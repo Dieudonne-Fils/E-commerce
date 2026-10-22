@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         <div>
           {product.category && (
-            <Link href={categoryHref(product.categoryId)} className="text-xs font-semibold uppercase tracking-widest text-clay-600 hover:text-clay-700">
+            <Link href={categoryHref(product.categoryId)} className="text-xs font-semibold uppercase tracking-widest text-brand-600 hover:text-brand-700">
               {product.category.name}
             </Link>
           )}
@@ -94,7 +94,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <span
               className={cn(
                 'h-2 w-2 rounded-full',
-                product.stock === 0 ? 'bg-muted-foreground' : isLowStock ? 'bg-clay-500' : 'bg-emerald-600'
+                product.stock === 0 ? 'bg-muted-foreground' : isLowStock ? 'bg-brand-500' : 'bg-emerald-600'
               )}
             />
             {product.stock === 0 ? 'Sold out' : isLowStock ? `Only ${product.stock} left, order soon` : 'In stock'}

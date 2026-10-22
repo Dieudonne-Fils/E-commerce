@@ -1,278 +1,132 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/Button'
-import { useAuth } from '@/contexts/AuthContext'
-import { Product, Order, User } from '@/types'
-import { Package, Users, ShoppingCart, TrendingUp, Plus } from 'lucide-react'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
+import { ArrowRight, BarChart3, Package, Plus, ShoppingCart, TrendingUp, Users } from 'lucide-react'
+import { AdminCard } from '@/components/admin/AdminCard'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge'
+import { StatTiles } from '@/components/admin/StatTiles'
+import { errorBoxClass, tableStyles } from '@/components/admin/adminStyles'
+import { Button } from '@/components/ui/Button'
+import { Loading } from '@/components/ui/Loading'
+import { useAdminData } from '@/hooks/useAdminData'
+import { Order } from '@/types'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
+
+interface AdminStats {
+  totalProducts: number
+  totalUsers: number
+  totalOrders: number
+  revenue: number
+  recentOrders: Order[]
+}
+
+const QUICK_LINKS = [
+  { href: '/admin/products', label: 'Products', description: 'Add, edit and price the catalog', icon: Package },
+  { href: '/admin/orders', label: 'Orders', description: 'Ship, cancel and export orders', icon: ShoppingCart },
+  { href: '/admin/users', label: 'Users', description: 'Customers and what they spend', icon: Users },
+  { href: '/admin/analytics', label: 'Analytics', description: 'Revenue trends and best sellers', icon: BarChart3 },
+]
 
 export default function AdminPage() {
-  const { user, token } = useAuth()
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalOrders: 0,
-    totalUsers: 0,
-    totalRevenue: 0,
-  })
-  const [recentOrders, setRecentOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (user?.role === 'ADMIN' && token) {
-      fetchAdminData()
-    }
-  }, [user, token])
-
-  const fetchAdminData = async () => {
-    if (!token) return
-
-    try {
-      // Fetch products
-      const productsResponse = await fetch('/api/products')
-      const productsData = await productsResponse.json()
-      
-      // Fetch orders (admin endpoint would be needed for all orders)
-      const ordersResponse = await fetch('/api/orders', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const ordersData = await ordersResponse.json()
-
-      setStats({
-        totalProducts: productsData.pagination?.total || 0,
-        totalOrders: ordersData.orders?.length || 0,
-        totalUsers: 0, // Would need admin endpoint
-        totalRevenue: ordersData.orders?.reduce((total: number, order: Order) => 
-          total + Number(order.total), 0) || 0,
-      })
-
-      setRecentOrders(ordersData.orders?.slice(0, 5) || [])
-    } catch (error) {
-      console.error('Failed to fetch admin data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (!user) {
-    return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Please Login</h1>
-            <p className="text-gray-600 mb-6">You need to be logged in to access the admin panel</p>
-            <Button asChild>
-              <Link href="/auth/login">Login</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  if (user.role !== 'ADMIN') {
-    return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">You don't have permission to access this page</p>
-            <Button asChild>
-              <Link href="/">Go Home</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'PROCESSING':
-        return 'bg-blue-100 text-blue-800'
-      case 'SHIPPED':
-        return 'bg-purple-100 text-purple-800'
-      case 'DELIVERED':
-        return 'bg-green-100 text-green-800'
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
+  const { data: stats, isLoading, error } = useAdminData<AdminStats>('/api/admin/stats')
 
   return (
-    <div>
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage your e-commerce store</p>
-            </div>
-            <Button asChild>
-              <Link href="/admin/products/new">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
+    <>
+      <AdminPageHeader
+        title="Dashboard"
+        description="An overview of your store"
+        action={
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Add product
+            </Link>
+          </Button>
+        }
+      />
+
+      {isLoading ? (
+        <Loading text="Loading dashboard..." />
+      ) : error || !stats ? (
+        <p className={errorBoxClass}>Could not load the dashboard: {error}</p>
+      ) : (
+        <div className="space-y-8">
+          <StatTiles
+            items={[
+              { label: 'Revenue', value: formatPrice(stats.revenue), icon: TrendingUp, hint: 'Excl. tax and cancelled orders' },
+              { label: 'Orders', value: stats.totalOrders.toLocaleString('en-US'), icon: ShoppingCart },
+              { label: 'Products', value: stats.totalProducts.toLocaleString('en-US'), icon: Package },
+              { label: 'Users', value: stats.totalUsers.toLocaleString('en-US'), icon: Users },
+            ]}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {QUICK_LINKS.map(({ href, label, description, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="group flex items-start gap-4 rounded-2xl border border-border bg-white p-5 transition-colors hover:border-primary-500"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 font-medium">
+                    {label}
+                    <ArrowRight className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{description}</span>
+                </span>
               </Link>
-            </Button>
+            ))}
           </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            </div>
-          ) : (
-            <>
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Package className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600">Total Products</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <ShoppingCart className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600">Total Orders</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Users className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600">Total Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <TrendingUp className="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600">Total Revenue</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {formatPrice(stats.totalRevenue)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          <AdminCard
+            title="Recent orders"
+            action={<Link href="/admin/orders" className="text-sm font-medium text-primary-700 hover:underline underline-offset-4">View all</Link>}
+            bodyClassName=""
+          >
+            {stats.recentOrders.length === 0 ? (
+              <p className="p-6 text-center text-muted-foreground">No orders yet</p>
+            ) : (
+              <div className={tableStyles.scroll}>
+                <table className={tableStyles.table}>
+                  <thead className={tableStyles.head}>
+                    <tr>
+                      <th className={tableStyles.th}>Order</th>
+                      <th className={tableStyles.th}>Customer</th>
+                      <th className={tableStyles.th}>Status</th>
+                      <th className={tableStyles.th}>Date</th>
+                      <th className={`${tableStyles.th} text-right`}>Total</th>
+                      <th className={tableStyles.th}><span className="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.recentOrders.map((order) => (
+                      <tr key={order.id} className={tableStyles.row}>
+                        <td className={`${tableStyles.td} font-medium whitespace-nowrap`}>#{order.id.slice(-8)}</td>
+                        <td className={tableStyles.td}>
+                          <p className="font-medium">{order.user?.name || 'No name'}</p>
+                          <p className="text-xs text-muted-foreground">{order.user?.email}</p>
+                        </td>
+                        <td className={tableStyles.td}><OrderStatusBadge status={order.status} /></td>
+                        <td className={`${tableStyles.td} whitespace-nowrap text-muted-foreground`}>{new Date(order.createdAt).toLocaleDateString('en-US', { dateStyle: 'medium' })}</td>
+                        <td className={`${tableStyles.td} text-right font-medium tabular-nums whitespace-nowrap`}>{formatPrice(priceBreakdown(Number(order.total)).total)}</td>
+                        <td className={`${tableStyles.td} text-right`}>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/admin/orders/${order.id}`}>View</Link>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
-              {/* Quick Actions */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Button asChild className="h-16">
-                  <Link href="/admin/products" className="flex flex-col items-center">
-                    <Package className="w-6 h-6 mb-1" />
-                    Manage Products
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-16">
-                  <Link href="/admin/orders" className="flex flex-col items-center">
-                    <ShoppingCart className="w-6 h-6 mb-1" />
-                    View Orders
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-16">
-                  <Link href="/admin/users" className="flex flex-col items-center">
-                    <Users className="w-6 h-6 mb-1" />
-                    Manage Users
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-16">
-                  <Link href="/admin/analytics" className="flex flex-col items-center">
-                    <TrendingUp className="w-6 h-6 mb-1" />
-                    Analytics
-                  </Link>
-                </Button>
-              </div>
-
-              {/* Recent Orders */}
-              <div className="bg-white rounded-lg shadow-sm border">
-                <div className="p-6 border-b">
-                  <h2 className="text-xl font-bold">Recent Orders</h2>
-                </div>
-                {recentOrders.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">
-                    No recent orders
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Order ID
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Total
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {recentOrders.map((order) => (
-                          <tr key={order.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              #{order.id.slice(-8)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
-                                {order.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatPrice(Number(order.total))}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                              <Button variant="outline" size="sm">
-                                View
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+            )}
+          </AdminCard>
         </div>
-      </main>
-    </div>
+      )}
+    </>
   )
 }

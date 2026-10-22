@@ -49,7 +49,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium">Sold out</span>
           )}
           {isLowStock && (
-            <span className="rounded-full bg-clay-600 px-2.5 py-1 text-xs font-medium text-white">Only {product.stock} left</span>
+            <span className="rounded-full bg-brand-600 px-2.5 py-1 text-xs font-medium text-white">Only {product.stock} left</span>
           )}
           {product.featured && !isSoldOut && (
             <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium">Bestseller</span>
@@ -80,7 +80,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </h3>
         {product.reviewCount > 0 && (
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Star className="h-3.5 w-3.5 fill-clay-500 text-clay-500" aria-hidden="true" />
+            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" aria-hidden="true" />
             <span className="font-medium text-foreground">{product.averageRating.toFixed(1)}</span>
             <span>({product.reviewCount})</span>
           </p>

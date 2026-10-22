@@ -1,404 +1,186 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, User, MapPin, CreditCard, Calendar } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import { Loader2, Mail, Phone } from 'lucide-react'
+import { AdminCard } from '@/components/admin/AdminCard'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { NEXT_ORDER_STATUS, OrderStatusBadge, canCancelOrder, orderStatusLabel } from '@/components/admin/OrderStatusBadge'
+import { changeOrderStatus } from '@/components/admin/orderActions'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { AnimatedElement } from '@/components/ui/AnimatedComponents'
+import { Loading } from '@/components/ui/Loading'
 import { useAuth } from '@/contexts/AuthContext'
 import { Order, OrderStatus, OrderStatusHistory } from '@/types'
-import toast from 'react-hot-toast'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
-const statusConfig = {
-  PENDING: { 
-    label: 'Pending', 
-    color: 'bg-yellow-100 text-yellow-800', 
-    icon: Clock,
-    badge: 'secondary'
-  },
-  PROCESSING: { 
-    label: 'Processing', 
-    color: 'bg-blue-100 text-blue-800', 
-    icon: Package,
-    badge: 'default'
-  },
-  SHIPPED: { 
-    label: 'Shipped', 
-    color: 'bg-purple-100 text-purple-800', 
-    icon: Truck,
-    badge: 'default'
-  },
-  DELIVERED: { 
-    label: 'Delivered', 
-    color: 'bg-green-100 text-green-800', 
-    icon: CheckCircle,
-    badge: 'default'
-  },
-  CANCELLED: { 
-    label: 'Cancelled', 
-    color: 'bg-red-100 text-red-800', 
-    icon: XCircle,
-    badge: 'destructive'
-  },
-} as const
+const formatDateTime = (date: Date | string) =>
+  new Date(date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
 
-export default function OrderDetailsPage() {
+export default function AdminOrderDetailsPage() {
   const params = useParams<{ id: string }>()
-  const { user, token } = useAuth()
-  const router = useRouter()
+  const { token } = useAuth()
   const [order, setOrder] = useState<Order | null>(null)
-  const [statusHistory, setStatusHistory] = useState<OrderStatusHistory[]>([])
-  const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
+  const [history, setHistory] = useState<OrderStatusHistory[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isUpdating, setIsUpdating] = useState(false)
 
-  useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      router.push('/')
-      return
-    }
-    fetchOrderDetails()
-  }, [user, router, params.id])
-
-  const fetchOrderDetails = async () => {
+  const fetchOrder = useCallback(async () => {
+    const headers = { Authorization: `Bearer ${token}` }
     try {
       const [orderResponse, historyResponse] = await Promise.all([
-        fetch(`/api/admin/orders/${params.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch(`/api/admin/orders/${params.id}/history`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        fetch(`/api/admin/orders/${params.id}`, { headers }),
+        fetch(`/api/admin/orders/${params.id}/history`, { headers }),
       ])
-
-      if (orderResponse.ok) {
-        const orderData = await orderResponse.json()
-        setOrder(orderData.order)
-      }
-
-      if (historyResponse.ok) {
-        const historyData = await historyResponse.json()
-        setStatusHistory(historyData.history || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch order details:', error)
-      toast.error('Failed to fetch order details')
+      setOrder(orderResponse.ok ? (await orderResponse.json()).order : null)
+      setHistory(historyResponse.ok ? (await historyResponse.json()).history ?? [] : [])
+    } catch {
+      setOrder(null)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
-  }
+  }, [params.id, token])
 
-  const updateOrderStatus = async (newStatus: OrderStatus) => {
-    setUpdating(true)
-    try {
-      const response = await fetch(`/api/admin/orders/${params.id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      })
+  useEffect(() => {
+    fetchOrder()
+  }, [fetchOrder])
 
-      if (response.ok) {
-        toast.success(`Order status updated to ${statusConfig[newStatus].label}`)
-        fetchOrderDetails() // Refresh order details
-      } else {
-        const data = await response.json()
-        toast.error(data.error || 'Failed to update order status')
-      }
-    } catch (error) {
-      toast.error('Failed to update order status')
-    } finally {
-      setUpdating(false)
+  const handleStatusChange = async (status: OrderStatus) => {
+    if (!order) return
+    setIsUpdating(true)
+    if (await changeOrderStatus(order.id, status, token)) {
+      await fetchOrder()
     }
+    setIsUpdating(false)
   }
 
-  const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
-    switch (currentStatus) {
-      case 'PENDING':
-        return 'PROCESSING'
-      case 'PROCESSING':
-        return 'SHIPPED'
-      case 'SHIPPED':
-        return 'DELIVERED'
-      default:
-        return null
-    }
-  }
-
-  if (!user || user.role !== 'ADMIN') {
-    return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">You don't have permission to access this page</p>
-            <Button asChild>
-              <Link href="/">Go Home</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
-                <div className="space-y-3">
-                  <div className="h-4 bg-gray-300 rounded"></div>
-                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
+  if (isLoading) {
+    return <Loading text="Loading order..." />
   }
 
   if (!order) {
     return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
-            <p className="text-gray-600 mb-6">The requested order could not be found.</p>
-            <Button asChild>
-              <Link href="/admin/orders">Back to Orders</Link>
-            </Button>
-          </div>
-        </main>
+      <div className="py-16 text-center">
+        <h1 className="mb-4 text-3xl">Order not found</h1>
+        <Button asChild>
+          <Link href="/admin/orders">Back to orders</Link>
+        </Button>
       </div>
     )
   }
 
-  const config = statusConfig[order.status]
-  const StatusIcon = config.icon
-  const nextStatus = getNextStatus(order.status)
+  const { subtotal, tax, total } = priceBreakdown(Number(order.total))
+  const nextStatus = NEXT_ORDER_STATUS[order.status]
+  // The history API lists newest first; the timeline reads oldest first, starting with the order itself
+  const timeline = [
+    { id: 'placed', label: 'Order placed', date: order.createdAt },
+    ...[...history].reverse().map((entry) => ({ id: entry.id, label: orderStatusLabel(entry.status), date: entry.changedAt })),
+  ]
 
   return (
-    <div>
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <AnimatedElement animation="slide-right" className="flex items-center justify-between mb-8">
-            <div className="flex items-center">
-              <Button variant="ghost" asChild className="mr-4">
-                <Link href="/admin/orders">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Orders
-                </Link>
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Order #{order.id.slice(0, 8)}
-                </h1>
-                <p className="text-gray-600">
-                  Placed on {new Date(order.createdAt).toLocaleString()}
-                </p>
+    <>
+      <AdminPageHeader
+        title={`Order #${order.id.slice(-8)}`}
+        description={
+          <span className="flex flex-wrap items-center gap-3">
+            <OrderStatusBadge status={order.status} />
+            <span>Placed {formatDateTime(order.createdAt)}</span>
+          </span>
+        }
+        back={{ href: '/admin/orders', label: 'Orders' }}
+      />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <AdminCard title={`Items (${order.items?.length ?? 0})`} bodyClassName="divide-y divide-border">
+            {order.items?.map((item) => (
+              <div key={item.id} className="flex items-center gap-4 px-6 py-4">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  {item.product?.image && <img src={item.product.image} alt="" className="h-full w-full object-cover" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/admin/products/${item.productId}/edit`} className="font-medium hover:underline underline-offset-4">
+                    {item.product?.name ?? 'Deleted product'}
+                  </Link>
+                  <p className="text-sm text-muted-foreground">
+                    {formatPrice(item.price)} × {item.quantity}
+                    {item.product && ` · ${item.product.stock} left in stock`}
+                  </p>
+                </div>
+                <p className="font-medium tabular-nums">{formatPrice(Number(item.price) * item.quantity)}</p>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Badge 
-                variant={config.badge as any}
-                className={`inline-flex items-center ${config.color}`}
-              >
-                <StatusIcon className="w-3 h-3 mr-1" />
-                {config.label}
-              </Badge>
-            </div>
-          </AnimatedElement>
+            ))}
+          </AdminCard>
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Order Details */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Customer Information */}
-              <AnimatedElement animation="fade-in" delay={100} className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Customer Information
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Name</label>
-                    <p className="text-gray-900">{order.user?.name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Email</label>
-                    <p className="text-gray-900">{order.user?.email || 'N/A'}</p>
-                  </div>
-                </div>
-              </AnimatedElement>
-
-              {/* Shipping Address */}
-              <AnimatedElement animation="fade-in" delay={200} className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <MapPin className="w-5 h-5 mr-2" />
-                  Shipping Address
-                </h2>
-                <p className="text-gray-900 whitespace-pre-line">{order.shippingAddress}</p>
-              </AnimatedElement>
-
-              {/* Order Items */}
-              <AnimatedElement animation="fade-in" delay={300} className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <Package className="w-5 h-5 mr-2" />
-                  Order Items ({order.items?.length || 0})
-                </h2>
-                <div className="space-y-4">
-                  {order.items?.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-gray-50">
-                      {item.product?.image && (
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                          <img
-                            src={item.product.image}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">
-                          {item.product?.name || 'Product not found'}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          Quantity: {item.quantity}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">
-                          {formatPrice(Number(item.price))}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {formatPrice(Number(item.price) * item.quantity)} total
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </AnimatedElement>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Order Summary */}
-              <AnimatedElement animation="slide-left" delay={100} className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Order Summary
-                </h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Items ({order.items?.length || 0})</span>
-                    <span className="font-semibold">{formatPrice(Number(order.total))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="font-semibold">Free</span>
-                  </div>
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-lg">Total</span>
-                      <span className="font-bold text-lg text-primary-600">
-                        {formatPrice(Number(order.total))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </AnimatedElement>
-
-              {/* Order Actions */}
-              <AnimatedElement animation="slide-left" delay={200} className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4">Actions</h2>
-                <div className="space-y-3">
-                  {nextStatus && (
-                    <Button
-                      onClick={() => updateOrderStatus(nextStatus)}
-                      disabled={updating}
-                      className="w-full hover-glow"
-                    >
-                      {updating ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      ) : (
-                        <Package className="w-4 h-4 mr-2" />
-                      )}
-                      Mark as {statusConfig[nextStatus].label}
-                    </Button>
-                  )}
-                  
-                  {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
-                    <Button
-                      onClick={() => updateOrderStatus('CANCELLED')}
-                      disabled={updating}
-                      variant="destructive"
-                      className="w-full"
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Cancel Order
-                    </Button>
-                  )}
-                </div>
-              </AnimatedElement>
-
-              {/* Status History */}
-              <AnimatedElement animation="slide-left" delay={300} className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Status History
-                </h2>
-                <div className="space-y-3">
-                  {statusHistory.length > 0 ? (
-                    statusHistory.map((history, index) => {
-                      const historyConfig = statusConfig[history.status]
-                      const HistoryIcon = historyConfig.icon
-                      
-                      return (
-                        <div key={history.id} className="flex items-start space-x-3">
-                          <div className={`p-2 rounded-full ${historyConfig.color}`}>
-                            <HistoryIcon className="w-3 h-3" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">
-                              {historyConfig.label}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(history.changedAt).toLocaleString()}
-                            </p>
-                            {history.note && (
-                              <p className="text-xs text-gray-600 mt-1">
-                                {history.note}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <p className="text-gray-500 text-sm">No status history available</p>
-                  )}
-                </div>
-              </AnimatedElement>
-            </div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <AdminCard title="Customer">
+              <p className="font-medium">{order.user?.name || 'No name'}</p>
+              {order.user?.email && (
+                <a href={`mailto:${order.user.email}`} className="mt-2 flex items-center gap-2 text-sm text-primary-700 hover:underline underline-offset-4">
+                  <Mail className="h-4 w-4" />
+                  {order.user.email}
+                </a>
+              )}
+              {order.user?.phone && (
+                <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  {order.user.phone}
+                </p>
+              )}
+            </AdminCard>
+            <AdminCard title="Shipping address">
+              <p className="whitespace-pre-line text-sm leading-relaxed">{order.shippingAddress}</p>
+            </AdminCard>
           </div>
         </div>
-      </main>
-    </div>
+
+        <div className="space-y-6">
+          <AdminCard title="Summary">
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="tabular-nums">{formatPrice(subtotal)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd>Free</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="tabular-nums">{formatPrice(tax)}</dd></div>
+              <div className="flex justify-between border-t border-border pt-3 text-base font-semibold"><dt>Total paid</dt><dd className="tabular-nums">{formatPrice(total)}</dd></div>
+            </dl>
+          </AdminCard>
+
+          <AdminCard title="Actions" bodyClassName="space-y-3 p-6">
+            {nextStatus || canCancelOrder(order.status) ? (
+              <>
+                {nextStatus && (
+                  <Button className="w-full" disabled={isUpdating} onClick={() => handleStatusChange(nextStatus)}>
+                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Mark as {orderStatusLabel(nextStatus).toLowerCase()}
+                  </Button>
+                )}
+                {canCancelOrder(order.status) && (
+                  <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" disabled={isUpdating} onClick={() => handleStatusChange('CANCELLED')}>
+                    Cancel order
+                  </Button>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {order.status === 'DELIVERED' ? 'This order has been delivered. Nothing left to do.' : 'This order was cancelled and its items are back in stock.'}
+              </p>
+            )}
+          </AdminCard>
+
+          <AdminCard title="History">
+            <ol className="space-y-4" aria-label="Order history">
+              {timeline.map((event, index) => (
+                <li key={event.id} className="flex gap-3">
+                  <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${index === timeline.length - 1 ? 'bg-primary' : 'bg-border'}`} />
+                  <div>
+                    <p className="text-sm font-medium">{event.label}</p>
+                    <p className="text-xs text-muted-foreground">{formatDateTime(event.date)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </AdminCard>
+        </div>
+      </div>
+    </>
   )
 }

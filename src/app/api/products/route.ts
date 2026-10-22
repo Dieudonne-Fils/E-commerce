@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAdminFromRequest } from '@/lib/auth'
-import { findProducts, parseProductQuery } from '@/lib/catalog'
+import { CATEGORY_NOT_FOUND, findProducts, parseProductQuery, productImageSchema, productWriteError } from '@/lib/catalog'
 
 const createProductSchema = z.object({
   name: z.string().min(1),
@@ -10,7 +10,8 @@ const createProductSchema = z.object({
   price: z.number().positive(),
   stock: z.number().int().min(0),
   categoryId: z.string(),
-  image: z.string().optional(),
+  image: productImageSchema.optional(),
+  featured: z.boolean().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -54,6 +55,11 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid input', details: error.errors },
         { status: 400 }
       )
+    }
+
+    const writeError = productWriteError(error, CATEGORY_NOT_FOUND)
+    if (writeError) {
+      return writeError
     }
 
     return NextResponse.json(

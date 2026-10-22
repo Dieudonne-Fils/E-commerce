@@ -25,9 +25,9 @@ export function HeroSection({ productCount }: HeroSectionProps) {
   return (
     <section className="container mx-auto px-4 pt-10 pb-16 lg:pt-16 lg:pb-24 grid items-center gap-12 lg:grid-cols-2">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-clay-600">The everyday edit</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">The everyday edit</p>
         <h1 className="mt-4 text-5xl leading-[1.05] sm:text-6xl xl:text-7xl">
-          Everyday goods, <em className="text-clay-600">thoughtfully</em> chosen.
+          Everyday goods, <em className="text-brand-600">thoughtfully</em> chosen.
         </h1>
         <p className="mt-6 max-w-md text-lg text-muted-foreground">
           {productCount} pieces across tech, wardrobe, home and outdoors. Picked to be used often and kept for years.

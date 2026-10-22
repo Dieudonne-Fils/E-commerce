@@ -116,7 +116,7 @@ export function RegisterForm() {
       <div className="mt-6 text-center">
         <p className="text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-foreground underline underline-offset-4 hover:text-clay-600">
+          <Link href="/auth/login" className="font-medium text-foreground underline underline-offset-4 hover:text-brand-600">
             Sign in here
           </Link>
         </p>

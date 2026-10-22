@@ -81,7 +81,7 @@ export default async function Home() {
             />
           </div>
           <div className="flex flex-col justify-center p-8 md:p-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-clay-600">The home edit</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">The home edit</p>
             <h2 className="mt-3 text-4xl md:text-5xl">Slow living starts at home.</h2>
             <p className="mt-4 max-w-md text-muted-foreground">
               Soft linen, warm light and furniture with character. Everything you need to make a space feel like yours.

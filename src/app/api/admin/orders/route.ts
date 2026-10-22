@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAdminFromRequest } from '@/lib/auth'
+import { adminOrderWhere } from '@/lib/orders'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,41 +19,7 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit
 
-    // Build where clause
-    const where: any = {}
-    
-    if (status) {
-      where.status = status
-    }
-
-    if (search) {
-      where.OR = [
-        {
-          id: {
-            contains: search,
-            mode: 'insensitive'
-          }
-        },
-        {
-          user: {
-            OR: [
-              {
-                name: {
-                  contains: search,
-                  mode: 'insensitive'
-                }
-              },
-              {
-                email: {
-                  contains: search,
-                  mode: 'insensitive'
-                }
-              }
-            ]
-          }
-        }
-      ]
-    }
+    const where = adminOrderWhere(status, search)
 
     // Build order clause
     let orderBy: any = { createdAt: 'desc' }
