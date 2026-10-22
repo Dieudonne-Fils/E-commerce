@@ -2,17 +2,30 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Pencil, Plus, Search, Star, Trash2 } from 'lucide-react'
+import { ExternalLink, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { AdminCard } from '@/components/admin/AdminCard'
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { AdminPagination } from '@/components/admin/AdminPagination'
+import { SearchField } from '@/components/admin/SearchField'
+import { selectClass, tableStyles } from '@/components/admin/adminStyles'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/contexts/AuthContext'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Category, Product } from '@/types'
-import { formatPrice } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 const PAGE_SIZE = 20
+
+function StockBadge({ stock }: { stock: number }) {
+  const [label, className] =
+    stock === 0
+      ? ['Sold out', 'bg-red-50 text-red-700 ring-red-200']
+      : stock <= 5
+        ? [`Low · ${stock}`, 'bg-amber-50 text-amber-800 ring-amber-200']
+        : [`In stock · ${stock}`, 'bg-emerald-50 text-emerald-800 ring-emerald-200']
+  return <span className={cn('whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset', className)}>{label}</span>
+}
 
 export default function AdminProductsPage() {
   const { token } = useAuth()
@@ -76,32 +89,24 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        <AdminPageHeader
-          title="Products"
-          description={`${pagination.total} products in the catalog`}
-          action={
-            <Button asChild>
-              <Link href="/admin/products/new">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Link>
-            </Button>
-          }
-        />
+    <>
+      <AdminPageHeader
+        title="Products"
+        description={`${pagination.total} products in the catalog`}
+        action={
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Add product
+            </Link>
+          </Button>
+        }
+      />
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or description" className="pl-9" aria-label="Search products" />
-          </div>
-          <select
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            aria-label="Filter by category"
-            className="h-11 rounded-lg border border-input bg-white px-3 text-sm"
-          >
+      <AdminCard bodyClassName="">
+        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row">
+          <SearchField value={search} onChange={setSearch} placeholder="Search by name or description" label="Search products" />
+          <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by category" className={selectClass}>
             <option value="">All categories</option>
             {categories.map((option) => (
               <option key={option.id} value={option.id}>{option.name}</option>
@@ -109,64 +114,65 @@ export default function AdminProductsPage() {
           </select>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs uppercase tracking-wider text-gray-500">
+        <div className={tableStyles.scroll}>
+          <table className={tableStyles.table}>
+            <thead className={tableStyles.head}>
               <tr>
-                <th className="px-4 py-3 font-medium">Product</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium text-right">Price</th>
-                <th className="px-4 py-3 font-medium text-right">Stock</th>
-                <th className="px-4 py-3 font-medium text-right">Actions</th>
+                <th className={tableStyles.th}>Product</th>
+                <th className={tableStyles.th}>Category</th>
+                <th className={`${tableStyles.th} text-right`}>Price</th>
+                <th className={tableStyles.th}>Stock</th>
+                <th className={`${tableStyles.th} text-right`}><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
-            <tbody className={`divide-y divide-gray-200 transition-opacity ${isLoading ? 'opacity-50' : ''}`}>
+            <tbody className={cn('transition-opacity', isLoading && 'opacity-50')}>
               {!isLoading && products.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-500">No products match these filters</td>
+                  <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">No products match these filters</td>
                 </tr>
               )}
               {products.map((product) => (
-                <tr key={product.id}>
-                  <td className="px-4 py-3">
+                <tr key={product.id} className={tableStyles.row}>
+                  <td className={tableStyles.td}>
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
                         {product.image && <img src={product.image} alt="" className="h-full w-full object-cover" />}
                       </div>
                       <div className="min-w-0">
-                        <Link href={`/products/${product.id}`} className="font-medium hover:underline underline-offset-4">
+                        <Link href={`/admin/products/${product.id}/edit`} className="font-medium hover:underline underline-offset-4">
                           {product.name}
                         </Link>
                         {product.featured && (
-                          <span className="ml-2 inline-flex items-center gap-1 text-xs text-brand-600">
+                          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                             Featured
-                          </span>
+                          </p>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{product.category?.name}</td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">{formatPrice(product.price)}</td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <span className={product.stock === 0 ? 'font-medium text-red-600' : product.stock <= 5 ? 'font-medium text-brand-600' : ''}>
-                      {product.stock === 0 ? 'Sold out' : product.stock}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" asChild>
+                  <td className={`${tableStyles.td} whitespace-nowrap text-muted-foreground`}>{product.category?.name}</td>
+                  <td className={`${tableStyles.td} text-right font-medium tabular-nums whitespace-nowrap`}>{formatPrice(product.price)}</td>
+                  <td className={tableStyles.td}><StockBadge stock={product.stock} /></td>
+                  <td className={tableStyles.td}>
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" asChild className="h-9 w-9">
+                        <Link href={`/products/${product.id}`} target="_blank" aria-label={`View ${product.name} in the store`}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" asChild className="h-9 w-9">
                         <Link href={`/admin/products/${product.id}/edit`} aria-label={`Edit ${product.name}`}>
                           <Pencil className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleDelete(product)}
                         disabled={deletingId === product.id}
                         aria-label={`Delete ${product.name}`}
-                        className="text-red-600 hover:bg-red-50"
+                        className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -178,18 +184,15 @@ export default function AdminProductsPage() {
           </table>
         </div>
 
-        {pagination.pages > 1 && (
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <Button variant="outline" size="sm" disabled={pagination.page <= 1 || isLoading} onClick={() => fetchProducts(pagination.page - 1)}>
-              Previous
-            </Button>
-            <span className="text-sm text-gray-600">Page {pagination.page} of {pagination.pages}</span>
-            <Button variant="outline" size="sm" disabled={pagination.page >= pagination.pages || isLoading} onClick={() => fetchProducts(pagination.page + 1)}>
-              Next
-            </Button>
-          </div>
-        )}
-      </div>
-    </main>
+        <AdminPagination
+          page={pagination.page}
+          pages={pagination.pages}
+          total={pagination.total}
+          noun="products"
+          onChange={fetchProducts}
+          disabled={isLoading}
+        />
+      </AdminCard>
+    </>
   )
 }

@@ -22,25 +22,34 @@ export default function EditProductPage() {
       .finally(() => setIsLoading(false))
   }, [params.id])
 
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        {isLoading ? (
-          <Loading text="Loading product..." />
-        ) : product ? (
-          <>
-            <AdminPageHeader title="Edit Product" description={product.name} />
-            <ProductForm product={product} />
-          </>
-        ) : (
-          <div className="py-16 text-center">
-            <h1 className="text-2xl font-bold mb-4">Product not found</h1>
-            <Button asChild>
-              <Link href="/admin/products">Back to products</Link>
-            </Button>
-          </div>
-        )}
+  if (isLoading) {
+    return <Loading text="Loading product..." />
+  }
+
+  if (!product) {
+    return (
+      <div className="py-16 text-center">
+        <h1 className="mb-4 text-3xl">Product not found</h1>
+        <Button asChild>
+          <Link href="/admin/products">Back to products</Link>
+        </Button>
       </div>
-    </main>
+    )
+  }
+
+  return (
+    <>
+      <AdminPageHeader
+        title={product.name}
+        description="Edit product"
+        back={{ href: '/admin/products', label: 'Products' }}
+        action={
+          <Button variant="outline" asChild>
+            <Link href={`/products/${product.id}`} target="_blank">View in store</Link>
+          </Button>
+        }
+      />
+      <ProductForm product={product} />
+    </>
   )
 }

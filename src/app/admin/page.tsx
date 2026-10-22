@@ -1,11 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { BarChart3, Package, Plus, ShoppingCart, TrendingUp, Users } from 'lucide-react'
+import { ArrowRight, BarChart3, Package, Plus, ShoppingCart, TrendingUp, Users } from 'lucide-react'
+import { AdminCard } from '@/components/admin/AdminCard'
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader'
+import { OrderStatusBadge } from '@/components/admin/OrderStatusBadge'
+import { StatTiles } from '@/components/admin/StatTiles'
+import { errorBoxClass, tableStyles } from '@/components/admin/adminStyles'
 import { Button } from '@/components/ui/Button'
+import { Loading } from '@/components/ui/Loading'
 import { useAdminData } from '@/hooks/useAdminData'
 import { Order } from '@/types'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 interface AdminStats {
   totalProducts: number
@@ -16,152 +22,111 @@ interface AdminStats {
 }
 
 const QUICK_LINKS = [
-  { href: '/admin/products', label: 'Manage Products', icon: Package },
-  { href: '/admin/orders', label: 'View Orders', icon: ShoppingCart },
-  { href: '/admin/users', label: 'Manage Users', icon: Users },
-  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/admin/products', label: 'Products', description: 'Add, edit and price the catalog', icon: Package },
+  { href: '/admin/orders', label: 'Orders', description: 'Ship, cancel and export orders', icon: ShoppingCart },
+  { href: '/admin/users', label: 'Users', description: 'Customers and what they spend', icon: Users },
+  { href: '/admin/analytics', label: 'Analytics', description: 'Revenue trends and best sellers', icon: BarChart3 },
 ]
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'PENDING':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'PROCESSING':
-      return 'bg-blue-100 text-blue-800'
-    case 'SHIPPED':
-      return 'bg-purple-100 text-purple-800'
-    case 'DELIVERED':
-      return 'bg-green-100 text-green-800'
-    case 'CANCELLED':
-      return 'bg-red-100 text-red-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
-}
 
 export default function AdminPage() {
   const { data: stats, isLoading, error } = useAdminData<AdminStats>('/api/admin/stats')
 
-  const statCards = stats
-    ? [
-        { label: 'Total Products', value: stats.totalProducts, icon: Package, tint: 'bg-blue-100 text-blue-600' },
-        { label: 'Total Orders', value: stats.totalOrders, icon: ShoppingCart, tint: 'bg-green-100 text-green-600' },
-        { label: 'Total Users', value: stats.totalUsers, icon: Users, tint: 'bg-purple-100 text-purple-600' },
-        { label: 'Revenue (excl. tax)', value: formatPrice(stats.revenue), icon: TrendingUp, tint: 'bg-yellow-100 text-yellow-600' },
-      ]
-    : []
-
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage your e-commerce store</p>
-          </div>
+    <>
+      <AdminPageHeader
+        title="Dashboard"
+        description="An overview of your store"
+        action={
           <Button asChild>
             <Link href="/admin/products/new">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
+              <Plus className="mr-2 h-4 w-4" />
+              Add product
             </Link>
           </Button>
-        </div>
+        }
+      />
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          </div>
-        ) : error || !stats ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 p-6 text-red-800">
-            Could not load the dashboard: {error}
-          </p>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {statCards.map(({ label, value, icon: Icon, tint }) => (
-                <div key={label} className="bg-white rounded-lg shadow-sm border p-6">
-                  <div className="flex items-center">
-                    <div className={`p-2 rounded-lg ${tint}`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600">{label}</p>
-                      <p className="text-2xl font-bold text-gray-900">{value}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {isLoading ? (
+        <Loading text="Loading dashboard..." />
+      ) : error || !stats ? (
+        <p className={errorBoxClass}>Could not load the dashboard: {error}</p>
+      ) : (
+        <div className="space-y-8">
+          <StatTiles
+            items={[
+              { label: 'Revenue', value: formatPrice(stats.revenue), icon: TrendingUp, hint: 'Excl. tax and cancelled orders' },
+              { label: 'Orders', value: stats.totalOrders.toLocaleString('en-US'), icon: ShoppingCart },
+              { label: 'Products', value: stats.totalProducts.toLocaleString('en-US'), icon: Package },
+              { label: 'Users', value: stats.totalUsers.toLocaleString('en-US'), icon: Users },
+            ]}
+          />
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {QUICK_LINKS.map(({ href, label, icon: Icon }, index) => (
-                <Button key={href} asChild variant={index === 0 ? 'default' : 'outline'} className="h-16">
-                  <Link href={href} className="flex flex-col items-center">
-                    <Icon className="w-6 h-6 mb-1" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {QUICK_LINKS.map(({ href, label, description, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="group flex items-start gap-4 rounded-2xl border border-border bg-white p-5 transition-colors hover:border-primary-500"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1 font-medium">
                     {label}
-                  </Link>
-                </Button>
-              ))}
-            </div>
+                    <ArrowRight className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </span>
+                  <span className="mt-1 block text-sm text-muted-foreground">{description}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
 
-            <div className="bg-white rounded-lg shadow-sm border">
-              <div className="p-6 border-b flex items-center justify-between">
-                <h2 className="text-xl font-bold">Recent Orders</h2>
-                <Link href="/admin/orders" className="text-sm font-medium underline underline-offset-4">
-                  All orders
-                </Link>
-              </div>
-              {stats.recentOrders.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
-                  No orders yet
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        {['Order ID', 'Customer', 'Date', 'Status', 'Subtotal', ''].map((heading) => (
-                          <th key={heading} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {heading}
-                          </th>
-                        ))}
+          <AdminCard
+            title="Recent orders"
+            action={<Link href="/admin/orders" className="text-sm font-medium text-primary-700 hover:underline underline-offset-4">View all</Link>}
+            bodyClassName=""
+          >
+            {stats.recentOrders.length === 0 ? (
+              <p className="p-6 text-center text-muted-foreground">No orders yet</p>
+            ) : (
+              <div className={tableStyles.scroll}>
+                <table className={tableStyles.table}>
+                  <thead className={tableStyles.head}>
+                    <tr>
+                      <th className={tableStyles.th}>Order</th>
+                      <th className={tableStyles.th}>Customer</th>
+                      <th className={tableStyles.th}>Status</th>
+                      <th className={tableStyles.th}>Date</th>
+                      <th className={`${tableStyles.th} text-right`}>Total</th>
+                      <th className={tableStyles.th}><span className="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.recentOrders.map((order) => (
+                      <tr key={order.id} className={tableStyles.row}>
+                        <td className={`${tableStyles.td} font-medium whitespace-nowrap`}>#{order.id.slice(-8)}</td>
+                        <td className={tableStyles.td}>
+                          <p className="font-medium">{order.user?.name || 'No name'}</p>
+                          <p className="text-xs text-muted-foreground">{order.user?.email}</p>
+                        </td>
+                        <td className={tableStyles.td}><OrderStatusBadge status={order.status} /></td>
+                        <td className={`${tableStyles.td} whitespace-nowrap text-muted-foreground`}>{new Date(order.createdAt).toLocaleDateString('en-US', { dateStyle: 'medium' })}</td>
+                        <td className={`${tableStyles.td} text-right font-medium tabular-nums whitespace-nowrap`}>{formatPrice(priceBreakdown(Number(order.total)).total)}</td>
+                        <td className={`${tableStyles.td} text-right`}>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/admin/orders/${order.id}`}>View</Link>
+                          </Button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {stats.recentOrders.map((order) => (
-                        <tr key={order.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            #{order.id.slice(-8)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {order.user?.name || order.user?.email}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatPrice(Number(order.total))}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/admin/orders/${order.id}`}>View</Link>
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </main>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AdminCard>
+        </div>
+      )}
+    </>
   )
 }
