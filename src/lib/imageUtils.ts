@@ -102,32 +102,3 @@ export const generateImageThumbnail = (
     img.src = base64
   })
 }
-
-export const batchOptimizeImages = async (
-  files: File[],
-  options?: ImageOptimizationOptions,
-  onProgress?: (progress: number) => void
-): Promise<string[]> => {
-  const optimizedImages: string[] = []
-  
-  for (let i = 0; i < files.length; i++) {
-    try {
-      const validation = validateImageFile(files[i])
-      if (validation) {
-        throw new Error(validation)
-      }
-
-      const optimized = await optimizeImage(files[i], options)
-      optimizedImages.push(optimized)
-      
-      if (onProgress) {
-        onProgress(((i + 1) / files.length) * 100)
-      }
-    } catch (error) {
-      console.error(`Failed to optimize image ${files[i].name}:`, error)
-      throw error
-    }
-  }
-
-  return optimizedImages
-}

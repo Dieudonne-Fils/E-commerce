@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getAdminFromRequest } from '@/lib/auth'
+import { CATEGORY_NOT_FOUND, PRODUCT_IN_ORDERS, productImageSchema, productWriteError } from '@/lib/catalog'
 
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
@@ -9,7 +10,9 @@ const updateProductSchema = z.object({
   price: z.number().positive().optional(),
   stock: z.number().int().min(0).optional(),
   categoryId: z.string().optional(),
-  image: z.string().optional(),
+  // null removes the current image
+  image: productImageSchema.nullable().optional(),
+  featured: z.boolean().optional(),
 })
 
 export async function GET(
@@ -75,6 +78,11 @@ export async function PUT(
       )
     }
 
+    const writeError = productWriteError(error, CATEGORY_NOT_FOUND)
+    if (writeError) {
+      return writeError
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -102,6 +110,11 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Product deleted successfully' })
   } catch (error) {
+    const writeError = productWriteError(error, PRODUCT_IN_ORDERS)
+    if (writeError) {
+      return writeError
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

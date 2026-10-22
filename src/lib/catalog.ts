@@ -1,6 +1,35 @@
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 import { Category as PrismaCategory, Prisma, Product as PrismaProduct } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { Product } from '@/types'
+
+// Site images or an in-browser optimised upload; external URLs would break next/image on every listing
+export const productImageSchema = z
+  .string()
+  .max(2_000_000, 'Image is too large')
+  .regex(/^(\/images\/|data:image\/(jpeg|png|webp);base64,)/, 'Unsupported image')
+
+export const CATEGORY_NOT_FOUND = 'This category does not exist'
+export const PRODUCT_IN_ORDERS = 'This product appears in existing orders and cannot be deleted. Set its stock to 0 to stop selling it.'
+
+// Turns the constraint errors an admin can actually trigger into clear answers instead of a 500.
+// A foreign key failure means a missing category on writes, but existing orders on delete.
+export function productWriteError(error: unknown, foreignKeyMessage: string) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+    return null
+  }
+  switch (error.code) {
+    case 'P2002':
+      return NextResponse.json({ error: 'A product with this name already exists' }, { status: 409 })
+    case 'P2003':
+      return NextResponse.json({ error: foreignKeyMessage }, { status: 409 })
+    case 'P2025':
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    default:
+      return null
+  }
+}
 
 // The id tiebreaker keeps pagination stable when several products share the sorted value
 export const PRODUCT_SORTS = {
