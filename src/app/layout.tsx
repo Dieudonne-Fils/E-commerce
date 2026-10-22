@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { Fraunces, Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
-import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/layout/Footer'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { siteConfig } from '@/lib/site'
@@ -29,11 +27,7 @@ export default function RootLayout({
       <body className="bg-background font-sans text-foreground antialiased">
         <AuthProvider>
           <CartProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <div className="flex-1">{children}</div>
-              <Footer />
-            </div>
+            {children}
             <Toaster
               position="bottom-center"
               toastOptions={{ className: '!rounded-full !bg-primary !text-primary-foreground !text-sm' }}
