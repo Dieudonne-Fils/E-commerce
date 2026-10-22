@@ -11,7 +11,7 @@ export function SectionHeading({ eyebrow, title, link }: SectionHeadingProps) {
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-clay-600">{eyebrow}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">{eyebrow}</p>
         <h2 className="mt-2 text-3xl md:text-4xl">{title}</h2>
       </div>
       {link && (

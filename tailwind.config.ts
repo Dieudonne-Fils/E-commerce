@@ -28,13 +28,14 @@ const config: Config = {
           600: '#292524',
           700: '#1c1917',
         },
-        // Clay: the single accent, reserved for highlights (badges, ratings, sale cues)
-        clay: {
-          50: '#fbf3ee',
-          100: '#f6e3d8',
-          500: '#c8643b',
-          600: '#b4532a',
-          700: '#923f1d',
+        // Brand blue: the single accent, reserved for highlights (badges, ratings, eyebrows, charts).
+        // 600 is the store's original button blue and keeps 5.2:1 contrast on white, so it is safe for small text
+        brand: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
         },
         secondary: {
           DEFAULT: '#f1ece4',

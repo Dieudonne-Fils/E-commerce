@@ -50,7 +50,7 @@ export function Header() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 ml-6 text-sm">
-            <Link href="/products" className="font-medium hover:text-clay-600 transition-colors">
+            <Link href="/products" className="font-medium hover:text-brand-600 transition-colors">
               Shop all
             </Link>
             {siteConfig.navCategories.map((category) => (
@@ -63,7 +63,7 @@ export function Header() {
               </Link>
             ))}
             {user?.role === 'ADMIN' && (
-              <Link href="/admin" className="font-medium text-clay-600 hover:text-clay-700 transition-colors">
+              <Link href="/admin" className="font-medium text-brand-600 hover:text-brand-700 transition-colors">
                 Admin
               </Link>
             )}
@@ -102,7 +102,7 @@ export function Header() {
               <Link href="/cart" aria-label={`Cart, ${cartItemsCount} items`}>
                 <ShoppingBag className="h-5 w-5" />
                 {cartItemsCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-clay-600 text-white text-[10px] font-semibold leading-[1.125rem] text-center">
+                  <span className="absolute top-0.5 right-0.5 min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-brand-600 text-white text-[10px] font-semibold leading-[1.125rem] text-center">
                     {cartItemsCount}
                   </span>
                 )}

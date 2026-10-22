@@ -135,11 +135,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               <div key={stars} className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1">
                   <span className="text-sm w-3">{stars}</span>
-                  <Star className="w-4 h-4 fill-clay-500 text-clay-500" />
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 </div>
                 <div className="flex-1 bg-white rounded-full h-2">
                   <div
-                    className="bg-clay-500 h-2 rounded-full"
+                    className="bg-yellow-400 h-2 rounded-full"
                     style={{
                       width: `${reviews.length > 0 ? (ratingDistribution[stars as keyof typeof ratingDistribution] / reviews.length) * 100 : 0}%`
                     }}
@@ -212,7 +212,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
           reviews.map((review) => (
             <div key={review.id} className="rounded-2xl border border-border bg-white p-6">
               <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-clay-100 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
                   {review.user?.avatar ? (
                     <img 
                       src={review.user.avatar} 
@@ -220,7 +220,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <span className="text-clay-700 font-semibold">
+                    <span className="text-brand-700 font-semibold">
                       {(review.user?.name || review.user?.email || 'U')[0].toUpperCase()}
                     </span>
                   )}

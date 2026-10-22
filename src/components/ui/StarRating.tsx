@@ -47,9 +47,9 @@ export function StarRating({
             <Star
               className={`${sizeClasses[size]} ${
                 isFilled 
-                  ? 'fill-clay-500 text-clay-500' 
+                  ? 'fill-yellow-400 text-yellow-400' 
                   : isHalfFilled
-                    ? 'fill-clay-100 text-clay-500'
+                    ? 'fill-yellow-200 text-yellow-400'
                     : 'fill-muted text-border'
               } transition-colors`}
             />

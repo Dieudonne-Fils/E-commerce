@@ -99,10 +99,10 @@ export function WishlistButton({ productId }: WishlistButtonProps) {
       disabled={loading}
       aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
       aria-pressed={isInWishlist}
-      className={`h-12 w-12 shrink-0 ${isInWishlist ? 'text-clay-600 border-clay-500 hover:bg-clay-50' : ''}`}
+      className={`h-12 w-12 shrink-0 ${isInWishlist ? 'text-brand-600 border-brand-500 hover:bg-brand-50' : ''}`}
     >
       <Heart 
-        className={`h-5 w-5 ${isInWishlist ? 'fill-clay-600' : ''}`} 
+        className={`h-5 w-5 ${isInWishlist ? 'fill-brand-600' : ''}`} 
       />
     </Button>
   )

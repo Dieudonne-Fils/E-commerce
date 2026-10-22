@@ -185,7 +185,7 @@ export default function OrderDetailsPage() {
               <ol className={`space-y-4 ${order.status === 'CANCELLED' ? '' : 'mt-8 border-t pt-6'}`} aria-label="Tracking history">
                 {trackingEvents.map((event, index) => (
                   <li key={event.id} className="flex items-start gap-4">
-                    <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${index === trackingEvents.length - 1 ? 'bg-clay-600' : 'bg-gray-300'}`} />
+                    <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${index === trackingEvents.length - 1 ? 'bg-brand-600' : 'bg-gray-300'}`} />
                     <div>
                       <p className="font-medium">{event.label}</p>
                       <p className="text-sm text-gray-600">{formatDateTime(event.date)}</p>
@@ -239,7 +239,7 @@ export default function OrderDetailsPage() {
                         {isDelivered && (
                           <Link
                             href={`/products/${item.productId}#reviews`}
-                            className="mt-2 flex items-center gap-1 text-sm font-medium text-clay-600 hover:text-clay-700"
+                            className="mt-2 flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700"
                           >
                             <Star className="h-4 w-4" />
                             Write a review

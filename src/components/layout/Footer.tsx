@@ -31,11 +31,11 @@ export function Footer() {
           <h2 className="font-sans text-xs font-semibold uppercase tracking-widest text-primary-foreground/50">Shop</h2>
           <ul className="space-y-2">
             <li>
-              <Link href="/products" className="hover:text-clay-100 transition-colors">All products</Link>
+              <Link href="/products" className="hover:text-brand-100 transition-colors">All products</Link>
             </li>
             {siteConfig.navCategories.map((category) => (
               <li key={category.id}>
-                <Link href={categoryHref(category.id)} className="hover:text-clay-100 transition-colors">
+                <Link href={categoryHref(category.id)} className="hover:text-brand-100 transition-colors">
                   {category.label}
                 </Link>
               </li>
@@ -48,7 +48,7 @@ export function Footer() {
           <ul className="space-y-2">
             {accountLinks.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="hover:text-clay-100 transition-colors">{link.label}</Link>
+                <Link href={link.href} className="hover:text-brand-100 transition-colors">{link.label}</Link>
               </li>
             ))}
           </ul>
