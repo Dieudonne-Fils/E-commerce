@@ -68,45 +68,58 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    // Update order status
-    const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
-      data: { 
-        status,
-        updatedAt: new Date()
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true
-          }
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      // Matching on the previous status makes a concurrent duplicate request fail instead of restocking twice
+      const order = await tx.order.update({
+        where: { id: orderId, status: existingOrder.status },
+        data: {
+          status,
+          updatedAt: new Date()
         },
-        items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                price: true,
-                image: true
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true
+            }
+          },
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  price: true,
+                  image: true
+                }
               }
             }
           }
         }
-      }
-    })
+      })
 
-    // Create status history record
-    await prisma.orderStatusHistory.create({
-      data: {
-        orderId: orderId,
-        status: status,
-        changedBy: adminId,
-        changedAt: new Date(),
-        note: `Status updated by admin`
+      // Stock was reserved at checkout, give it back
+      if (status === 'CANCELLED') {
+        for (const item of order.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } }
+          })
+        }
       }
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: orderId,
+          status: status,
+          changedBy: adminId,
+          changedAt: new Date(),
+          note: `Status updated by admin`
+        }
+      })
+
+      return order
     })
 
     // TODO: Send notification email to customer

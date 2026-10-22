@@ -7,6 +7,12 @@ const createOrderSchema = z.object({
   shippingAddress: z.string().min(1),
 })
 
+class OutOfStockError extends Error {
+  constructor(productName: string) {
+    super(`Insufficient stock for ${productName}`)
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserFromRequest(request)
@@ -71,6 +77,17 @@ export async function POST(request: NextRequest) {
     )
 
     const order = await prisma.$transaction(async (tx) => {
+      // Conditional decrement: concurrent orders cannot both take the last units
+      for (const item of cartItems) {
+        const { count } = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        })
+        if (count === 0) {
+          throw new OutOfStockError(item.product.name)
+        }
+      }
+
       const createdOrder = await tx.order.create({
         data: {
           userId,
@@ -110,6 +127,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
         { status: 400 }
+      )
+    }
+
+    if (error instanceof OutOfStockError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 }
       )
     }
 
