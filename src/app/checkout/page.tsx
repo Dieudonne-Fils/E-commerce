@@ -9,7 +9,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 export default function CheckoutPage() {
   const { items, getCartTotal, clearCart } = useCart()
@@ -111,9 +111,7 @@ export default function CheckoutPage() {
     )
   }
 
-  const subtotal = getCartTotal()
-  const tax = subtotal * 0.1
-  const total = subtotal + tax
+  const { subtotal, tax, total } = priceBreakdown(getCartTotal())
 
   return (
     <div>

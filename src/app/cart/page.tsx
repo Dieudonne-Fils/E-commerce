@@ -6,7 +6,7 @@ import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getCartTotal, loading } = useCart()
@@ -143,12 +143,12 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>{formatPrice(getCartTotal() * 0.1)}</span>
+                  <span>{formatPrice(priceBreakdown(getCartTotal()).tax)}</span>
                 </div>
                 <hr />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>{formatPrice(getCartTotal() * 1.1)}</span>
+                  <span>{formatPrice(priceBreakdown(getCartTotal()).total)}</span>
                 </div>
               </div>
               
