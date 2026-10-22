@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 
 interface WishlistButtonProps {
   productId: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'lg'
 }
 
 export function WishlistButton({ productId, size = 'lg' }: WishlistButtonProps) {

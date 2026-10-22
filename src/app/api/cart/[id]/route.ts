@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getUserFromRequest } from '@/lib/auth'
 
 const updateCartItemSchema = z.object({
   quantity: z.number().int().positive(),
 })
 
-async function getUserFromRequest(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  const payload = verifyToken(token)
-  return payload ? payload.userId : null
-}
-
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = await getUserFromRequest(request)
     if (!userId) {
       return NextResponse.json(
@@ -36,7 +26,7 @@ export async function PUT(
 
     const cartItem = await prisma.cartItem.update({
       where: {
-        id: params.id,
+        id,
         userId,
       },
       data: { quantity },
@@ -67,9 +57,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = await getUserFromRequest(request)
     if (!userId) {
       return NextResponse.json(
@@ -80,7 +71,7 @@ export async function DELETE(
 
     await prisma.cartItem.delete({
       where: {
-        id: params.id,
+        id,
         userId,
       },
     })

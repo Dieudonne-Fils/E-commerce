@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, User, MapPin, CreditCard, Calendar } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
@@ -45,13 +45,8 @@ const statusConfig = {
   },
 } as const
 
-interface OrderDetailsPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+export default function OrderDetailsPage() {
+  const params = useParams<{ id: string }>()
   const { user, token } = useAuth()
   const router = useRouter()
   const [order, setOrder] = useState<Order | null>(null)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyJWT } from '@/lib/jwt'
+import { getAdminFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
 const updateStatusSchema = z.object({
@@ -8,20 +8,15 @@ const updateStatusSchema = z.object({
 })
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const payload = verifyJWT(token)
-    if (!payload || payload.role !== 'ADMIN') {
+    const adminId = await getAdminFromRequest(request)
+    if (!adminId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -36,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const { status } = validation.data
-    const orderId = params.id
+    const { id: orderId } = await params
 
     // Check if order exists
     const existingOrder = await prisma.order.findUnique({
@@ -108,7 +103,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       data: {
         orderId: orderId,
         status: status,
-        changedBy: payload.userId,
+        changedBy: adminId,
         changedAt: new Date(),
         note: `Status updated by admin`
       }

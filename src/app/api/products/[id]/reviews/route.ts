@@ -1,31 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getUserFromRequest } from '@/lib/auth'
 
 const createReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().optional(),
 })
 
-async function getUserFromRequest(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  const payload = verifyToken(token)
-  return payload ? payload.userId : null
-}
-
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const reviews = await prisma.review.findMany({
-      where: { productId: params.id },
+      where: { productId: id },
       include: {
         user: {
           select: {
@@ -49,9 +39,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = await getUserFromRequest(request)
     if (!userId) {
       return NextResponse.json(
@@ -68,7 +59,7 @@ export async function POST(
       where: {
         userId_productId: {
           userId,
-          productId: params.id,
+          productId: id,
         },
       },
     })
@@ -84,7 +75,7 @@ export async function POST(
     const review = await prisma.review.create({
       data: {
         userId,
-        productId: params.id,
+        productId: id,
         rating,
         comment,
       },
@@ -101,7 +92,7 @@ export async function POST(
 
     // Update product average rating and review count
     const reviews = await prisma.review.findMany({
-      where: { productId: params.id },
+      where: { productId: id },
       select: { rating: true },
     })
 
@@ -109,7 +100,7 @@ export async function POST(
     const reviewCount = reviews.length
 
     await prisma.product.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         averageRating,
         reviewCount,
