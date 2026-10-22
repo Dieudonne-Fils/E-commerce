@@ -55,7 +55,7 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <div key={item.id} className="border rounded-lg p-4 flex items-center space-x-4">
+              <div key={item.id} className="border rounded-lg p-4 flex flex-wrap items-center gap-4">
                 <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
                   {item.product?.image ? (
                     <Image
@@ -72,7 +72,7 @@ export default function CartPage() {
                   )}
                 </div>
                 
-                <div className="flex-grow">
+                <div className="min-w-[10rem] flex-1">
                   <h3 className="font-semibold text-lg">
                     {item.product?.name}
                   </h3>
@@ -108,7 +108,7 @@ export default function CartPage() {
                   </Button>
                 </div>
                 
-                <div className="text-right">
+                <div className="ml-auto text-right">
                   <p className="font-bold text-lg">
                     {formatPrice(Number(item.product?.price || 0) * item.quantity)}
                   </p>

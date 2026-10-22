@@ -127,7 +127,7 @@ export default function OrderDetailsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center mb-8">
+          <div className="flex flex-wrap items-center gap-y-2 mb-8">
             <Button variant="ghost" asChild className="mr-4">
               <Link href="/profile">
                 <ArrowLeft className="w-4 h-4 mr-2" />
