@@ -74,6 +74,7 @@ export interface Order {
   updatedAt: Date
   items?: OrderItem[]
   user?: User
+  statusHistory?: Pick<OrderStatusHistory, 'id' | 'status' | 'changedAt'>[]
 }
 
 export interface OrderItem {

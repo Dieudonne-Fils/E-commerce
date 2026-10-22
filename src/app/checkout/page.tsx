@@ -3,13 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 export default function CheckoutPage() {
   const { items, getCartTotal, clearCart } = useCart()
@@ -82,7 +82,6 @@ export default function CheckoutPage() {
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Please Login</h1>
@@ -99,7 +98,6 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
@@ -113,13 +111,10 @@ export default function CheckoutPage() {
     )
   }
 
-  const subtotal = getCartTotal()
-  const tax = subtotal * 0.1
-  const total = subtotal + tax
+  const { subtotal, tax, total } = priceBreakdown(getCartTotal())
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
         
@@ -258,7 +253,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        ${(Number(item.product?.price || 0) * item.quantity).toFixed(2)}
+                        {formatPrice(Number(item.product?.price || 0) * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -268,7 +263,7 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -276,12 +271,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{formatPrice(tax)}</span>
                 </div>
                 <hr />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
               </div>
               

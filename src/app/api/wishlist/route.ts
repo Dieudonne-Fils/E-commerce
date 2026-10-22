@@ -1,22 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
+import { getUserFromRequest } from '@/lib/auth'
 
 const addToWishlistSchema = z.object({
   productId: z.string(),
 })
-
-async function getUserFromRequest(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  const payload = verifyToken(token)
-  return payload ? payload.userId : null
-}
 
 export async function GET(request: NextRequest) {
   try {

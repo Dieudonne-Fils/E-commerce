@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { ProductCard } from '@/components/product/ProductCard'
 import { useAuth } from '@/contexts/AuthContext'
@@ -46,7 +45,6 @@ export default function WishlistPage() {
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Heart className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -64,7 +62,6 @@ export default function WishlistPage() {
   if (loading) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -76,7 +73,6 @@ export default function WishlistPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>

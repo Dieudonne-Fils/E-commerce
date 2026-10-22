@@ -3,10 +3,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getCartTotal, loading } = useCart()
@@ -15,7 +15,6 @@ export default function CartPage() {
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <ShoppingBag className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -33,7 +32,6 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <ShoppingBag className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -50,7 +48,6 @@ export default function CartPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
         
@@ -80,7 +77,7 @@ export default function CartPage() {
                     {item.product?.name}
                   </h3>
                   <p className="text-gray-600">
-                    ${Number(item.product?.price).toFixed(2)} each
+                    {formatPrice(Number(item.product?.price))} each
                   </p>
                   {item.product?.category && (
                     <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs mt-1">
@@ -113,7 +110,7 @@ export default function CartPage() {
                 
                 <div className="text-right">
                   <p className="font-bold text-lg">
-                    ${(Number(item.product?.price || 0) * item.quantity).toFixed(2)}
+                    {formatPrice(Number(item.product?.price || 0) * item.quantity)}
                   </p>
                   <Button
                     variant="ghost"
@@ -138,7 +135,7 @@ export default function CartPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>Items ({items.reduce((total, item) => total + item.quantity, 0)})</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>{formatPrice(getCartTotal())}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -146,12 +143,12 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>${(getCartTotal() * 0.1).toFixed(2)}</span>
+                  <span>{formatPrice(priceBreakdown(getCartTotal()).tax)}</span>
                 </div>
                 <hr />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${(getCartTotal() * 1.1).toFixed(2)}</span>
+                  <span>{formatPrice(priceBreakdown(getCartTotal()).total)}</span>
                 </div>
               </div>
               

@@ -1,169 +1,117 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/layout/Footer'
+import { ArrowRight } from 'lucide-react'
 import { HeroSection } from '@/components/home/HeroSection'
 import { Button } from '@/components/ui/Button'
+import { SectionHeading } from '@/components/ui/SectionHeading'
 import { ProductCard } from '@/components/product/ProductCard'
-import { AnimatedElement, StaggeredList, CountUp, Typewriter } from '@/components/ui/AnimatedComponents'
-import { Product } from '@/types'
-import { TrendingUp, Award, Truck, HeadphonesIcon } from 'lucide-react'
+import { findProducts } from '@/lib/catalog'
+import { prisma } from '@/lib/prisma'
+import { categoryHref } from '@/lib/site'
 
-async function getFeaturedProducts(): Promise<Product[]> {
-  try {
-    const response = await fetch('http://localhost:3000/api/products?featured=true&limit=4', {
-      cache: 'no-store',
-    })
-    if (response.ok) {
-      const data = await response.json()
-      return data.products || []
-    }
-  } catch (error) {
-    console.error('Failed to fetch featured products:', error)
-  }
-  return []
-}
+// Reads the catalog on every request instead of at build time
+export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const featuredProducts = await getFeaturedProducts()
+  const [categories, featured, topRated] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        _count: { select: { products: true } },
+        products: { take: 1, orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }], select: { image: true } },
+      },
+    }),
+    findProducts({ featured: true, sort: 'newest', page: 1, limit: 8 }),
+    findProducts({ minRating: 1, sort: 'rating', page: 1, limit: 4 }),
+  ])
+  const productCount = categories.reduce((total, category) => total + category._count.products, 0)
+
   return (
-    <div>
-      <Header />
-      <main className="min-h-screen">
-        {/* Hero Section */}
-        <HeroSection />
-        
-        {/* Features Section */}
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
-            <AnimatedElement animation="fade-in" className="text-center mb-16">
-              <Typewriter 
-                text="Why Choose Us?" 
-                className="text-4xl font-bold text-gray-900 mb-4"
-                speed={100}
-              />
-              <AnimatedElement animation="slide-up" delay={1000}>
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  Experience the best in online shopping with our premium features and exceptional service
-                </p>
-              </AnimatedElement>
-            </AnimatedElement>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <AnimatedElement animation="scale" delay={200} className="text-center group hover-float">
-                <div className="w-20 h-20 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform animate-gradient-x">
-                  <TrendingUp className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">Trending Products</h3>
-                <CountUp end={1000} suffix="+" className="text-2xl font-bold text-primary-600" />
-                <p className="text-gray-600 leading-relaxed mt-2">
-                  Discover the latest trends and bestselling items curated just for you
-                </p>
-              </AnimatedElement>
-              
-              <AnimatedElement animation="scale" delay={400} className="text-center group hover-float">
-                <div className="w-20 h-20 gradient-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform animate-gradient-x">
-                  <Award className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">Premium Quality</h3>
-                <CountUp end={99} suffix="%" className="text-2xl font-bold text-primary-600" />
-                <p className="text-gray-600 leading-relaxed mt-2">
-                  Every product is carefully selected to meet our high standards of quality
-                </p>
-              </AnimatedElement>
-              
-              <AnimatedElement animation="scale" delay={600} className="text-center group hover-float">
-                <div className="w-20 h-20 gradient-success rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform animate-gradient-x">
-                  <Truck className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">Fast Shipping</h3>
-                <CountUp end={24} suffix=" hrs" className="text-2xl font-bold text-primary-600" />
-                <p className="text-gray-600 leading-relaxed mt-2">
-                  Free shipping on all orders with lightning-fast delivery worldwide
-                </p>
-              </AnimatedElement>
-              
-              <AnimatedElement animation="scale" delay={800} className="text-center group hover-float">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform animate-gradient-x">
-                  <HeadphonesIcon className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">24/7 Support</h3>
-                <CountUp end={50000} suffix="+" className="text-2xl font-bold text-primary-600" />
-                <p className="text-gray-600 leading-relaxed mt-2">
-                  Our dedicated support team is here to help you anytime, anywhere
-                </p>
-              </AnimatedElement>
-            </div>
+    <main>
+      <HeroSection productCount={productCount} />
+
+      <section id="categories" className="container mx-auto px-4 py-16 scroll-mt-28">
+        <SectionHeading eyebrow="Browse" title="Shop by category" link={{ href: '/products', label: 'All products' }} />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-6">
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              href={categoryHref(category.id)}
+              className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted"
+            >
+              {category.products[0]?.image && (
+                <Image
+                  src={category.products[0].image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1280px) 16vw, (min-width: 768px) 33vw, 50vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                <h3 className="font-serif text-xl leading-tight">{category.name}</h3>
+                <p className="mt-1 text-sm text-white/80">{category._count.products} products</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {featured.products.length > 0 && (
+        <section className="container mx-auto px-4 py-16">
+          <SectionHeading eyebrow="Editor's picks" title="Bestsellers right now" link={{ href: '/products', label: 'Shop all' }} />
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 xl:grid-cols-4">
+            {featured.products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         </section>
+      )}
 
-        {/* Featured Products */}
-        {featuredProducts.length > 0 && (
-          <section className="py-16 bg-gray-50">
-            <div className="container mx-auto px-4">
-              <AnimatedElement animation="fade-in" className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Products</h2>
-                <p className="text-gray-600 max-w-2xl mx-auto">
-                  Discover our handpicked selection of premium products
-                </p>
-              </AnimatedElement>
-              
-              <StaggeredList
-                staggerDelay={150}
-                animation="scale"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-              >
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </StaggeredList>
-              
-              <AnimatedElement animation="bounce-in" delay={800} className="text-center mt-8">
-                <Button asChild variant="outline" size="lg" className="hover-lift">
-                  <Link href="/products">View All Products</Link>
-                </Button>
-              </AnimatedElement>
-            </div>
-          </section>
-        )}
-
-        {/* Call to Action Section */}
-        <section className="py-20 gradient-primary text-white animate-gradient-x">
-          <div className="container mx-auto px-4 text-center">
-            <div className="max-w-4xl mx-auto">
-              <AnimatedElement animation="fade-in">
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                  Ready to Start Shopping?
-                </h2>
-              </AnimatedElement>
-              <AnimatedElement animation="slide-up" delay={300}>
-                <p className="text-xl mb-8 opacity-90">
-                  Join thousands of satisfied customers and experience the best online shopping today
-                </p>
-              </AnimatedElement>
-              <AnimatedElement animation="bounce-in" delay={600}>
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Button 
-                    size="lg" 
-                    className="bg-white text-primary-600 hover:bg-gray-100 btn-glow hover-lift"
-                    asChild
-                  >
-                    <Link href="/products">Explore Products</Link>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="border-white text-white hover:bg-white hover:text-primary-600 hover-scale"
-                    asChild
-                  >
-                    <Link href="/auth/register">Create Account</Link>
-                  </Button>
-                </div>
-              </AnimatedElement>
+      <section className="container mx-auto px-4 py-16">
+        <div className="grid overflow-hidden rounded-3xl bg-secondary md:grid-cols-2">
+          <div className="relative min-h-[18rem] md:min-h-[28rem]">
+            <Image
+              src="/images/products/velvet-three-seater-sofa.jpg"
+              alt="Deep green velvet sofa"
+              fill
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="flex flex-col justify-center p-8 md:p-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-clay-600">The home edit</p>
+            <h2 className="mt-3 text-4xl md:text-5xl">Slow living starts at home.</h2>
+            <p className="mt-4 max-w-md text-muted-foreground">
+              Soft linen, warm light and furniture with character. Everything you need to make a space feel like yours.
+            </p>
+            <div className="mt-8">
+              <Button size="lg" asChild>
+                <Link href={categoryHref('cat_home')}>
+                  Shop home & kitchen
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {topRated.products.length > 0 && (
+        <section className="container mx-auto px-4 py-16">
+          <SectionHeading
+            eyebrow="Loved by customers"
+            title="Top rated"
+            link={{ href: '/products?sort=rating', label: 'See all top rated' }}
+          />
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">
+            {topRated.products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </section>
-      </main>
-      <Footer />
-    </div>
+      )}
+    </main>
   )
 }

@@ -71,9 +71,9 @@ export function LoginForm() {
       </form>
       
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Don't have an account?{' '}
-          <Link href="/auth/register" className="text-primary-600 hover:text-primary-700 font-medium">
+          <Link href="/auth/register" className="font-medium text-foreground underline underline-offset-4 hover:text-clay-600">
             Sign up here
           </Link>
         </p>

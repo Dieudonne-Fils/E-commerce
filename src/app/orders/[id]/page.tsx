@@ -1,53 +1,46 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Package, MapPin, Calendar, ArrowLeft, Truck } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
+import { Package, MapPin, Calendar, ArrowLeft, Truck, Download, Star } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Loading } from '@/components/ui/Loading'
 import { useAuth } from '@/contexts/AuthContext'
-import { Order } from '@/types'
+import { useOrder } from '@/hooks/useOrder'
+import { OrderStatus } from '@/types'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
+
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING: 'Order placed',
+  PROCESSING: 'Processing',
+  SHIPPED: 'Shipped',
+  DELIVERED: 'Delivered',
+  CANCELLED: 'Cancelled',
+}
+
+const formatDateTime = (date: Date | string) =>
+  new Date(date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
 
 export default function OrderDetailsPage() {
-  const [order, setOrder] = useState<Order | null>(null)
-  const [loading, setLoading] = useState(true)
-  const { user, token } = useAuth()
-  const params = useParams()
+  const { user } = useAuth()
+  const params = useParams<{ id: string }>()
+  const { order, isLoading } = useOrder(params.id)
+  const [isTrackingOpen, setIsTrackingOpen] = useState(false)
+  const trackingRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (user && token && params.id) {
-      fetchOrder(params.id as string)
-    }
-  }, [user, token, params.id])
-
-  const fetchOrder = async (orderId: string) => {
-    if (!token) return
-
-    try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (response.ok) {
-        const orderData = await response.json()
-        setOrder(orderData)
-      }
-    } catch (error) {
-      console.error('Failed to fetch order:', error)
-    } finally {
-      setLoading(false)
-    }
+  if (isLoading) {
+    return (
+      <div>
+        <Loading text="Loading order details..." />
+      </div>
+    )
   }
 
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Package className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -62,19 +55,9 @@ export default function OrderDetailsPage() {
     )
   }
 
-  if (loading) {
-    return (
-      <div>
-        <Header />
-        <Loading text="Loading order details..." />
-      </div>
-    )
-  }
-
   if (!order) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Package className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -87,6 +70,21 @@ export default function OrderDetailsPage() {
         </main>
       </div>
     )
+  }
+
+  const { subtotal, tax, total } = priceBreakdown(Number(order.total))
+  const isDelivered = order.status === 'DELIVERED'
+  // The order creation is the first event; later ones come from the status history
+  const trackingEvents = [
+    { id: 'placed', label: STATUS_LABELS.PENDING, date: order.createdAt },
+    ...(order.statusHistory ?? []).map((event) => ({ id: event.id, label: STATUS_LABELS[event.status], date: event.changedAt })),
+  ]
+
+  const toggleTracking = () => {
+    setIsTrackingOpen(!isTrackingOpen)
+    if (!isTrackingOpen) {
+      trackingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -126,7 +124,6 @@ export default function OrderDetailsPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -154,18 +151,18 @@ export default function OrderDetailsPage() {
           </div>
 
           {/* Order Status Tracking */}
-          {order.status !== 'CANCELLED' && (
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-              <h2 className="text-xl font-bold mb-6">Order Tracking</h2>
+          <div ref={trackingRef} className="bg-white rounded-lg shadow-sm border p-6 mb-8 scroll-mt-32">
+            <h2 className="text-xl font-bold mb-6">Order Tracking</h2>
+            {order.status !== 'CANCELLED' && (
               <div className="flex items-center justify-between">
                 {getStatusSteps().map((step, index) => (
-                  <div key={step.key} className="flex flex-col items-center flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
-                      step.completed 
-                        ? 'bg-primary-600 border-primary-600 text-white' 
+                  <div key={step.key} className="relative flex flex-col items-center flex-1">
+                    <div className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
+                      step.completed
+                        ? 'bg-primary-600 border-primary-600 text-white'
                         : step.active
-                          ? 'border-primary-600 text-primary-600'
-                          : 'border-gray-300 text-gray-400'
+                          ? 'bg-white border-primary-600 text-primary-600'
+                          : 'bg-white border-gray-300 text-gray-400'
                     }`}>
                       <step.icon className="w-6 h-6" />
                     </div>
@@ -175,19 +172,33 @@ export default function OrderDetailsPage() {
                       {step.label}
                     </span>
                     {index < getStatusSteps().length - 1 && (
-                      <div className={`absolute h-0.5 w-full top-6 left-1/2 transform translate-x-1/2 ${
+                      <div className={`absolute h-0.5 w-full top-6 left-1/2 ${
                         step.completed ? 'bg-primary-600' : 'bg-gray-300'
-                      }`} style={{ zIndex: -1 }}></div>
+                      }`}></div>
                     )}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+
+            {(isTrackingOpen || order.status === 'CANCELLED') && (
+              <ol className={`space-y-4 ${order.status === 'CANCELLED' ? '' : 'mt-8 border-t pt-6'}`} aria-label="Tracking history">
+                {trackingEvents.map((event, index) => (
+                  <li key={event.id} className="flex items-start gap-4">
+                    <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${index === trackingEvents.length - 1 ? 'bg-clay-600' : 'bg-gray-300'}`} />
+                    <div>
+                      <p className="font-medium">{event.label}</p>
+                      <p className="text-sm text-gray-600">{formatDateTime(event.date)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Order Items */}
-            <div className="lg:col-span-2">
+            <div id="order-items" className="lg:col-span-2 scroll-mt-32">
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="p-6 border-b">
                   <h2 className="text-xl font-bold">Order Items</h2>
@@ -195,7 +206,7 @@ export default function OrderDetailsPage() {
                 <div className="divide-y">
                   {order.items?.map((item) => (
                     <div key={item.id} className="p-6 flex items-center space-x-4">
-                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
+                      <Link href={`/products/${item.productId}`} className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
                         {item.product?.image ? (
                           <Image
                             src={item.product.image}
@@ -209,25 +220,36 @@ export default function OrderDetailsPage() {
                             📦
                           </div>
                         )}
-                      </div>
-                      
+                      </Link>
+
                       <div className="flex-grow">
                         <h3 className="font-semibold text-lg">
-                          {item.product?.name || 'Unknown Product'}
+                          <Link href={`/products/${item.productId}`} className="hover:underline underline-offset-4">
+                            {item.product?.name || 'Unknown Product'}
+                          </Link>
                         </h3>
                         <p className="text-gray-600">
-                          ${Number(item.price).toFixed(2)} × {item.quantity}
+                          {formatPrice(Number(item.price))} × {item.quantity}
                         </p>
                         {item.product?.category && (
                           <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs mt-1">
                             {item.product.category.name}
                           </span>
                         )}
+                        {isDelivered && (
+                          <Link
+                            href={`/products/${item.productId}#reviews`}
+                            className="mt-2 flex items-center gap-1 text-sm font-medium text-clay-600 hover:text-clay-700"
+                          >
+                            <Star className="h-4 w-4" />
+                            Write a review
+                          </Link>
+                        )}
                       </div>
-                      
+
                       <div className="text-right">
                         <p className="font-bold text-lg">
-                          ${(Number(item.price) * item.quantity).toFixed(2)}
+                          {formatPrice(Number(item.price) * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -244,7 +266,7 @@ export default function OrderDetailsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${Number(order.total).toFixed(2)}</span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -252,12 +274,12 @@ export default function OrderDetailsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${(Number(order.total) * 0.1).toFixed(2)}</span>
+                    <span>{formatPrice(tax)}</span>
                   </div>
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span>${(Number(order.total) * 1.1).toFixed(2)}</span>
+                    <span>{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>
@@ -275,15 +297,19 @@ export default function OrderDetailsPage() {
 
               {/* Order Actions */}
               <div className="space-y-3">
-                <Button variant="outline" className="w-full">
-                  Track Package
+                <Button variant="outline" className="w-full" onClick={toggleTracking} aria-expanded={isTrackingOpen}>
+                  <Truck className="w-4 h-4 mr-2" />
+                  {isTrackingOpen ? 'Hide tracking history' : 'Track Package'}
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Download Invoice
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href={`/orders/${order.id}/invoice?print=1`} target="_blank">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Invoice
+                  </Link>
                 </Button>
-                {order.status === 'DELIVERED' && (
-                  <Button className="w-full">
-                    Leave a Review
+                {isDelivered && (
+                  <Button className="w-full" asChild>
+                    <Link href="#order-items">Leave a Review</Link>
                   </Button>
                 )}
               </div>

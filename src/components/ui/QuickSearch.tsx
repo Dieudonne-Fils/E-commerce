@@ -5,6 +5,7 @@ import { Search, X, TrendingUp, Clock, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Product } from '@/types'
 import { useDebounce } from '@/hooks/useDebounce'
+import { formatPrice } from '@/lib/utils'
 
 interface QuickSearchProps {
   isOpen: boolean
@@ -164,7 +165,7 @@ export function QuickSearch({ isOpen, onClose }: QuickSearchProps) {
                         {product.category?.name}
                       </p>
                       <p className="text-lg font-semibold text-primary-600">
-                        ${Number(product.price).toFixed(2)}
+                        {formatPrice(Number(product.price))}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-colors" />

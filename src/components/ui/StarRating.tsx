@@ -47,17 +47,17 @@ export function StarRating({
             <Star
               className={`${sizeClasses[size]} ${
                 isFilled 
-                  ? 'fill-yellow-400 text-yellow-400' 
+                  ? 'fill-clay-500 text-clay-500' 
                   : isHalfFilled
-                    ? 'fill-yellow-200 text-yellow-400'
-                    : 'fill-gray-200 text-gray-300'
+                    ? 'fill-clay-100 text-clay-500'
+                    : 'fill-muted text-border'
               } transition-colors`}
             />
           </button>
         )
       })}
       {rating > 0 && (
-        <span className="text-sm text-gray-600 ml-2">
+        <span className="text-sm text-muted-foreground ml-2">
           ({rating.toFixed(1)})
         </span>
       )}

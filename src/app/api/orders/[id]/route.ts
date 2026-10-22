@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
-
-const updateOrderSchema = z.object({
-  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']),
-})
-
-async function getUserFromRequest(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  const payload = verifyToken(token)
-  return payload ? payload.userId : null
-}
+import { getUserFromRequest } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const userId = await getUserFromRequest(request)
     if (!userId) {
       return NextResponse.json(
@@ -33,14 +18,21 @@ export async function GET(
 
     const order = await prisma.order.findUnique({
       where: {
-        id: params.id,
+        id,
         userId,
       },
       include: {
         items: {
           include: {
-            product: true,
+            product: {
+              include: { category: true },
+            },
           },
+        },
+        // Who changed the status stays internal: customers only see what happened and when
+        statusHistory: {
+          select: { id: true, status: true, changedAt: true },
+          orderBy: { changedAt: 'asc' },
         },
       },
     })
@@ -54,53 +46,6 @@ export async function GET(
 
     return NextResponse.json(order)
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const userId = await getUserFromRequest(request)
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const body = await request.json()
-    const { status } = updateOrderSchema.parse(body)
-
-    const order = await prisma.order.update({
-      where: {
-        id: params.id,
-        userId,
-      },
-      data: { status },
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    })
-
-    return NextResponse.json(order)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
-        { status: 400 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

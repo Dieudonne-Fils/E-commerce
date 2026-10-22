@@ -64,7 +64,7 @@ export function useStaggeredIntersectionObserver(
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
-              setVisibleItems(prev => new Set([...prev, index]))
+              setVisibleItems(prev => new Set(prev).add(index))
             }
           },
           { threshold, root, rootMargin }

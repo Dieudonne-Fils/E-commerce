@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyJWT } from '@/lib/jwt'
+import { getAdminFromRequest } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const payload = verifyJWT(token)
-    if (!payload || payload.role !== 'ADMIN') {
+    const adminId = await getAdminFromRequest(request)
+    if (!adminId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

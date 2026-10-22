@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, User, MapPin, CreditCard, Calendar } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { AnimatedElement } from '@/components/ui/AnimatedComponents'
 import { useAuth } from '@/contexts/AuthContext'
 import { Order, OrderStatus, OrderStatusHistory } from '@/types'
 import toast from 'react-hot-toast'
+import { formatPrice } from '@/lib/utils'
 
 const statusConfig = {
   PENDING: { 
@@ -45,13 +45,8 @@ const statusConfig = {
   },
 } as const
 
-interface OrderDetailsPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+export default function OrderDetailsPage() {
+  const params = useParams<{ id: string }>()
   const { user, token } = useAuth()
   const router = useRouter()
   const [order, setOrder] = useState<Order | null>(null)
@@ -141,7 +136,6 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   if (!user || user.role !== 'ADMIN') {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
@@ -158,7 +152,6 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   if (loading) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
@@ -181,7 +174,6 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   if (!order) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -202,7 +194,6 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -293,10 +284,10 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-900">
-                          ${Number(item.price).toFixed(2)}
+                          {formatPrice(Number(item.price))}
                         </p>
                         <p className="text-sm text-gray-500">
-                          ${(Number(item.price) * item.quantity).toFixed(2)} total
+                          {formatPrice(Number(item.price) * item.quantity)} total
                         </p>
                       </div>
                     </div>
@@ -316,7 +307,7 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Items ({order.items?.length || 0})</span>
-                    <span className="font-semibold">${Number(order.total).toFixed(2)}</span>
+                    <span className="font-semibold">{formatPrice(Number(order.total))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
@@ -326,7 +317,7 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
                     <div className="flex justify-between">
                       <span className="font-semibold text-lg">Total</span>
                       <span className="font-bold text-lg text-primary-600">
-                        ${Number(order.total).toFixed(2)}
+                        {formatPrice(Number(order.total))}
                       </span>
                     </div>
                   </div>

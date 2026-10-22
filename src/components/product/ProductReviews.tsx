@@ -94,10 +94,10 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-8 bg-muted rounded w-1/3"></div>
         <div className="space-y-3">
-          <div className="h-4 bg-gray-200 rounded"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-muted rounded"></div>
+          <div className="h-4 bg-muted rounded w-3/4"></div>
         </div>
       </div>
     )
@@ -107,8 +107,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
     <div className="space-y-6">
       {/* Reviews Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center">
-          <MessageSquare className="w-6 h-6 mr-2" />
+        <h2 className="text-3xl md:text-4xl flex items-center">
           Customer Reviews
         </h2>
         {user && !showReviewForm && (
@@ -119,10 +118,10 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
       </div>
 
       {/* Rating Summary */}
-      <div className="bg-gray-50 rounded-lg p-6">
+      <div className="bg-secondary rounded-3xl p-6 md:p-8">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="text-center">
-            <div className="text-4xl font-bold text-gray-900 mb-2">
+            <div className="font-serif text-5xl text-foreground mb-2">
               {averageRating.toFixed(1)}
             </div>
             <StarRating rating={averageRating} size="lg" />
@@ -136,11 +135,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
               <div key={stars} className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1">
                   <span className="text-sm w-3">{stars}</span>
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 fill-clay-500 text-clay-500" />
                 </div>
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div className="flex-1 bg-white rounded-full h-2">
                   <div
-                    className="bg-yellow-400 h-2 rounded-full"
+                    className="bg-clay-500 h-2 rounded-full"
                     style={{
                       width: `${reviews.length > 0 ? (ratingDistribution[stars as keyof typeof ratingDistribution] / reviews.length) * 100 : 0}%`
                     }}
@@ -157,7 +156,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
 
       {/* Review Form */}
       {showReviewForm && (
-        <div className="border rounded-lg p-6">
+        <div className="rounded-2xl border border-border bg-white p-6">
           <h3 className="text-lg font-semibold mb-4">Write Your Review</h3>
           <form onSubmit={submitReview} className="space-y-4">
             <div>
@@ -181,7 +180,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Share your thoughts about this product..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-input rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-input"
               />
             </div>
             
@@ -211,9 +210,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
           </div>
         ) : (
           reviews.map((review) => (
-            <div key={review.id} className="border rounded-lg p-6">
+            <div key={review.id} className="rounded-2xl border border-border bg-white p-6">
               <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 bg-clay-100 rounded-full flex items-center justify-center">
                   {review.user?.avatar ? (
                     <img 
                       src={review.user.avatar} 
@@ -221,7 +220,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <span className="text-primary-600 font-semibold">
+                    <span className="text-clay-700 font-semibold">
                       {(review.user?.name || review.user?.email || 'U')[0].toUpperCase()}
                     </span>
                   )}

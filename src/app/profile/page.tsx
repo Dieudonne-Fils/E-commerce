@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import { Order } from '@/types'
 import { Package, User, Calendar, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { formatPrice, priceBreakdown } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { user, token } = useAuth()
@@ -43,7 +43,6 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <User className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -77,7 +76,6 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Profile Header */}
@@ -144,7 +142,7 @@ export default function ProfilePage() {
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold">${Number(order.total).toFixed(2)}</div>
+                        <div className="text-xl font-bold">{formatPrice(priceBreakdown(Number(order.total)).total)}</div>
                         <div className="text-sm text-gray-600">
                           {order.items?.length || 0} item(s)
                         </div>
@@ -168,7 +166,7 @@ export default function ProfilePage() {
                                 {item.product?.name} × {item.quantity}
                               </span>
                               <span className="text-sm font-medium">
-                                ${(Number(item.price) * item.quantity).toFixed(2)}
+                                {formatPrice(Number(item.price) * item.quantity)}
                               </span>
                             </div>
                           ))}
@@ -177,8 +175,8 @@ export default function ProfilePage() {
                     )}
 
                     <div className="flex justify-end mt-4">
-                      <Button variant="outline" size="sm">
-                        View Details
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/orders/${order.id}`}>View Details</Link>
                       </Button>
                     </div>
                   </div>
