@@ -207,7 +207,7 @@ export default function OrderDetailsPage() {
               </Button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Order #{order.id.slice(0, 8)}
+                  Order #{order.id.slice(-8)}
                 </h1>
                 <p className="text-gray-600">
                   Placed on {new Date(order.createdAt).toLocaleString()}

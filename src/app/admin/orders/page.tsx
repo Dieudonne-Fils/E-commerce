@@ -307,7 +307,7 @@ export default function AdminOrdersPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
                               <div className="font-medium text-gray-900">
-                                #{order.id.slice(0, 8)}
+                                #{order.id.slice(-8)}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {order?.items?.length || 0} item(s)
