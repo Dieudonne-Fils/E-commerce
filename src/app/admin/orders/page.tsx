@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Eye, Package, Truck, CheckCircle, XCircle, Clock, Filter, Search, Download } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -46,8 +45,7 @@ const statusConfig = {
 } as const
 
 export default function AdminOrdersPage() {
-  const { user, token } = useAuth()
-  const router = useRouter()
+  const { token } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
@@ -64,12 +62,8 @@ export default function AdminOrdersPage() {
   })
 
   useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      router.push('/')
-      return
-    }
     fetchOrders()
-  }, [user, router, filters, pagination.page])
+  }, [filters, pagination.page])
 
   const fetchOrders = async () => {
     try {
@@ -170,22 +164,6 @@ export default function AdminOrdersPage() {
     }
   }
 
-  if (!user || user.role !== 'ADMIN') {
-    return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">You don't have permission to access this page</p>
-            <Button>
-              <Link href="/">Go Home</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
   return (
     <div>
       <main className="container mx-auto px-4 py-8">
@@ -193,7 +171,7 @@ export default function AdminOrdersPage() {
           {/* Header */}
           <AnimatedElement animation="slide-right" className="flex items-center justify-between mb-8">
             <div className="flex items-center">
-              <Button variant="ghost" className="mr-4">
+              <Button variant="ghost" className="mr-4" asChild>
                 <Link href="/admin">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Admin

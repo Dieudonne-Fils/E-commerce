@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, User, MapPin, CreditCard, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -47,20 +47,15 @@ const statusConfig = {
 
 export default function OrderDetailsPage() {
   const params = useParams<{ id: string }>()
-  const { user, token } = useAuth()
-  const router = useRouter()
+  const { token } = useAuth()
   const [order, setOrder] = useState<Order | null>(null)
   const [statusHistory, setStatusHistory] = useState<OrderStatusHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      router.push('/')
-      return
-    }
     fetchOrderDetails()
-  }, [user, router, params.id])
+  }, [params.id])
 
   const fetchOrderDetails = async () => {
     try {
@@ -131,22 +126,6 @@ export default function OrderDetailsPage() {
       default:
         return null
     }
-  }
-
-  if (!user || user.role !== 'ADMIN') {
-    return (
-      <div>
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">You don't have permission to access this page</p>
-            <Button asChild>
-              <Link href="/">Go Home</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    )
   }
 
   if (loading) {
