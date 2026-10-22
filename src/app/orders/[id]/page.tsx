@@ -159,13 +159,13 @@ export default function OrderDetailsPage() {
               <h2 className="text-xl font-bold mb-6">Order Tracking</h2>
               <div className="flex items-center justify-between">
                 {getStatusSteps().map((step, index) => (
-                  <div key={step.key} className="flex flex-col items-center flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
+                  <div key={step.key} className="relative flex flex-col items-center flex-1">
+                    <div className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
                       step.completed 
                         ? 'bg-primary-600 border-primary-600 text-white' 
                         : step.active
-                          ? 'border-primary-600 text-primary-600'
-                          : 'border-gray-300 text-gray-400'
+                          ? 'bg-white border-primary-600 text-primary-600'
+                          : 'bg-white border-gray-300 text-gray-400'
                     }`}>
                       <step.icon className="w-6 h-6" />
                     </div>
@@ -175,9 +175,9 @@ export default function OrderDetailsPage() {
                       {step.label}
                     </span>
                     {index < getStatusSteps().length - 1 && (
-                      <div className={`absolute h-0.5 w-full top-6 left-1/2 transform translate-x-1/2 ${
+                      <div className={`absolute h-0.5 w-full top-6 left-1/2 ${
                         step.completed ? 'bg-primary-600' : 'bg-gray-300'
-                      }`} style={{ zIndex: -1 }}></div>
+                      }`}></div>
                     )}
                   </div>
                 ))}
