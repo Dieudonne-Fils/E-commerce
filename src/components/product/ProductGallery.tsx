@@ -15,7 +15,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="aspect-square bg-muted rounded-3xl flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl text-gray-300 mb-2">📸</div>
           <p className="text-gray-500">No image available</p>
@@ -40,7 +40,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
     <div className="space-y-4">
       {/* Main Image */}
       <div className="relative group">
-        <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg">
+        <div className="aspect-square bg-muted rounded-3xl overflow-hidden">
           <img
             src={images[currentIndex]}
             alt={`${productName} - Image ${currentIndex + 1}`}
@@ -98,7 +98,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               onClick={() => goToImage(index)}
               className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                 index === currentIndex
-                  ? 'border-primary-500 scale-105 shadow-md'
+                  ? 'border-primary scale-105 shadow-md'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >

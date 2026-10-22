@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { ShoppingCart, Share2, Minus, Plus } from 'lucide-react'
+import { Minus, Plus, Share2, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { WishlistButton } from './WishlistButton'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Product } from '@/types'
-import toast from 'react-hot-toast'
 import { formatPrice } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 interface ProductActionsProps {
   product: Product
@@ -18,6 +18,7 @@ export function ProductActions({ product }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1)
   const { addToCart, loading } = useCart()
   const { user } = useAuth()
+  const isSoldOut = product.stock === 0
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -54,88 +55,62 @@ export function ProductActions({ product }: ProductActionsProps) {
 
   return (
     <div className="space-y-4">
-      {/* Quantity Selector */}
-      <div className="flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">Quantity:</label>
-        <div className="flex items-center border rounded-md">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={decrementQuantity}
-            disabled={quantity <= 1}
-            className="h-10 w-10 rounded-r-none"
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
-          <span className="w-16 text-center py-2 font-semibold">
-            {quantity}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={incrementQuantity}
-            disabled={quantity >= product.stock}
-            className="h-10 w-10 rounded-l-none"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        <span className="text-sm text-gray-500">
-          ({product.stock} available)
-        </span>
-      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        {!isSoldOut && (
+          <div className="flex h-12 items-center rounded-full border border-input bg-white">
+            <button
+              type="button"
+              onClick={decrementQuantity}
+              disabled={quantity <= 1}
+              aria-label="Decrease quantity"
+              className="flex h-12 w-11 items-center justify-center rounded-l-full hover:bg-secondary disabled:opacity-40"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-8 text-center font-medium tabular-nums" aria-live="polite">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              onClick={incrementQuantity}
+              disabled={quantity >= product.stock}
+              aria-label="Increase quantity"
+              className="flex h-12 w-11 items-center justify-center rounded-r-full hover:bg-secondary disabled:opacity-40"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
-      {/* Action Buttons */}
-      <div className="flex space-x-3">
         <Button
           onClick={handleAddToCart}
-          disabled={product.stock === 0 || loading}
-          className="flex-1"
+          disabled={isSoldOut || loading}
           size="lg"
+          className="min-w-[12rem] flex-1"
         >
-          <ShoppingCart className="h-5 w-5 mr-2" />
-          {loading ? 'Adding...' : 'Add to Cart'}
+          <ShoppingBag className="mr-2 h-5 w-5" />
+          {isSoldOut ? 'Sold out' : loading ? 'Adding...' : 'Add to cart'}
         </Button>
-        
-        <WishlistButton productId={product.id} />
-        
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={handleShare}
-          className="w-14"
-        >
-          <Share2 className="h-5 w-5" />
-        </Button>
+
+        <div className="flex gap-3">
+          <WishlistButton productId={product.id} />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleShare}
+            aria-label="Share this product"
+            className="h-12 w-12"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
-      {/* Stock Warning */}
-      {product.stock > 0 && product.stock <= 5 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-md p-3">
-          <p className="text-orange-800 text-sm font-medium">
-            ⚠️ Only {product.stock} left in stock - order soon!
-          </p>
-        </div>
+      {quantity > 1 && (
+        <p className="text-sm text-muted-foreground">
+          Total for {quantity}: <span className="font-semibold text-foreground">{formatPrice(product.price * quantity)}</span>
+        </p>
       )}
-
-      {/* Out of Stock */}
-      {product.stock === 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-red-800 text-sm font-medium">
-            😔 This item is currently out of stock
-          </p>
-        </div>
-      )}
-
-      {/* Total Price */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <div className="flex justify-between items-center">
-          <span className="text-lg font-medium">Total:</span>
-          <span className="text-2xl font-bold text-primary-600">
-            {formatPrice(Number(product.price) * quantity)}
-          </span>
-        </div>
-      </div>
     </div>
   )
 }

@@ -2,111 +2,91 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShoppingCart } from 'lucide-react'
+import { useState } from 'react'
+import { Loader2, Plus, Star } from 'lucide-react'
 import { Product } from '@/types'
-import { Button } from '@/components/ui/Button'
-import { StarRating } from '@/components/ui/StarRating'
 import { useCart } from '@/contexts/CartContext'
-import { formatPrice } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'
 
 interface ProductCardProps {
   product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCart, loading } = useCart()
+  const { addToCart } = useCart()
+  // Local state: the cart context loading flag is shared by every card on the page
+  const [isAdding, setIsAdding] = useState(false)
 
-  const handleAddToCart = () => {
-    addToCart(product, 1)
+  const href = `/products/${product.id}`
+  const isSoldOut = product.stock === 0
+  const isLowStock = product.stock > 0 && product.stock <= 5
+
+  const handleAddToCart = async () => {
+    setIsAdding(true)
+    await addToCart(product, 1)
+    setIsAdding(false)
   }
 
   return (
-    <div className="border rounded-lg p-4 hover:shadow-lg transition-all duration-300 group hover-lift bg-white">
-      <div className="aspect-square relative mb-4 bg-gray-100 rounded-md overflow-hidden group-hover:scale-110 transition-transform duration-300">
-        {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <div className="text-4xl mb-2">📦</div>
-              <div className="text-sm">No Image</div>
-            </div>
-          </div>
-        )}
-        
-        {product.stock === 0 && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <span className="text-white font-semibold">Out of Stock</span>
-          </div>
+    <article className="group">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted">
+        <Link href={href} tabIndex={-1} aria-hidden="true">
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt=""
+              fill
+              sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw"
+              className={cn('object-cover transition-transform duration-500 group-hover:scale-105', isSoldOut && 'opacity-60')}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No image</div>
+          )}
+        </Link>
+
+        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+          {isSoldOut && (
+            <span className="rounded-full bg-white px-2.5 py-1 text-xs font-medium">Sold out</span>
+          )}
+          {isLowStock && (
+            <span className="rounded-full bg-clay-600 px-2.5 py-1 text-xs font-medium text-white">Only {product.stock} left</span>
+          )}
+          {product.featured && !isSoldOut && (
+            <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium">Bestseller</span>
+          )}
+        </div>
+
+        {!isSoldOut && (
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            aria-label={`Add ${product.name} to cart`}
+            className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-md transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-70"
+          >
+            {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-5 w-5" />}
+          </button>
         )}
       </div>
-      
-      <div className="space-y-2">
-        <Link href={`/products/${product.id}`}>
-          <h3 className="font-semibold text-lg hover:text-primary-600 transition-colors line-clamp-2">
+
+      <div className="mt-3 space-y-1">
+        {product.category && (
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">{product.category.name}</p>
+        )}
+        <h3 className="font-medium leading-snug line-clamp-2">
+          <Link href={href} className="hover:underline underline-offset-4">
             {product.name}
-          </h3>
-        </Link>
-        
-        {product.description && (
-          <p className="text-gray-600 text-sm line-clamp-2">
-            {product.description}
+          </Link>
+        </h3>
+        {product.reviewCount > 0 && (
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Star className="h-3.5 w-3.5 fill-clay-500 text-clay-500" aria-hidden="true" />
+            <span className="font-medium text-foreground">{product.averageRating.toFixed(1)}</span>
+            <span>({product.reviewCount})</span>
           </p>
         )}
-        
-        {/* Rating */}
-        {product.reviewCount > 0 && (
-          <div className="flex items-center space-x-2">
-            <StarRating rating={product.averageRating} size="sm" />
-            <span className="text-sm text-gray-500">
-              ({product.reviewCount} {product.reviewCount === 1 ? 'review' : 'reviews'})
-            </span>
-          </div>
-        )}
-        
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-primary-600">
-            {formatPrice(Number(product.price))}
-          </span>
-          <span className={`text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-          </span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          {product.category && (
-            <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
-              {product.category.name}
-            </span>
-          )}
-          {product.featured && (
-            <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
-              ⭐ Featured
-            </span>
-          )}
-        </div>
+        <p className="font-semibold">{formatPrice(product.price)}</p>
       </div>
-      
-      <div className="flex gap-2 mt-4">
-        <Button asChild className="flex-1" variant="outline">
-          <Link href={`/products/${product.id}`}>
-            View Details
-          </Link>
-        </Button>
-        <Button 
-          onClick={handleAddToCart}
-          disabled={product.stock === 0 || loading}
-          className="flex-1 hover-glow transition-all duration-300"
-        >
-          <ShoppingCart className={`h-4 w-4 mr-2 transition-transform duration-200 ${loading ? 'animate-spin' : 'group-hover:animate-bounce'}`} />
-          {loading ? 'Adding...' : 'Add to Cart'}
-        </Button>
-      </div>
-    </div>
+    </article>
   )
 }

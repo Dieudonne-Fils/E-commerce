@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/contexts/AuthContext'
 import { Product, Order, User } from '@/types'
@@ -59,7 +58,6 @@ export default function AdminPage() {
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Please Login</h1>
@@ -76,7 +74,6 @@ export default function AdminPage() {
   if (user.role !== 'ADMIN') {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
@@ -109,7 +106,6 @@ export default function AdminPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

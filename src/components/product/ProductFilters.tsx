@@ -1,203 +1,150 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { FormEvent, ReactNode, useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { StarRating } from '@/components/ui/StarRating'
-import { Category } from '@/types'
-import { Filter, X } from 'lucide-react'
+import type { ProductSort } from '@/lib/catalog'
+import { productsHref } from '@/lib/site'
+import { cn } from '@/lib/utils'
+
+const SORT_OPTIONS: Record<ProductSort, string> = {
+  newest: 'Newest',
+  'price-asc': 'Price: low to high',
+  'price-desc': 'Price: high to low',
+  rating: 'Top rated',
+  name: 'Name A-Z',
+}
+
+const RATING_OPTIONS = [
+  { value: '4', label: '4 stars & up' },
+  { value: '3', label: '3 stars & up' },
+  { value: '', label: 'Any rating' },
+]
+
+const FILTER_KEYS = ['minPrice', 'maxPrice', 'minRating', 'inStock'] as const
 
 interface ProductFiltersProps {
-  categories: Category[]
-  onFiltersChange: (filters: FilterState) => void
-  isOpen: boolean
-  onToggle: () => void
+  params: Record<string, string>
+  total: number
+  children: ReactNode
 }
 
-export interface FilterState {
-  search: string
-  category: string
-  minPrice: number
-  maxPrice: number
-  minRating: number
-  sortBy: string
-  inStock: boolean
-}
+export function ProductFilters({ params, total, children }: ProductFiltersProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [minPrice, setMinPrice] = useState(params.minPrice ?? '')
+  const [maxPrice, setMaxPrice] = useState(params.maxPrice ?? '')
 
-export function ProductFilters({ categories, onFiltersChange, isOpen, onToggle }: ProductFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    search: '',
-    category: '',
-    minPrice: 0,
-    maxPrice: 10000,
-    minRating: 0,
-    sortBy: 'newest',
-    inStock: false,
-  })
-
+  // Keep the inputs in sync when the URL changes from elsewhere (clear link, back button)
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      onFiltersChange(filters)
-    }, 300) // Debounce for 300ms
+    setMinPrice(params.minPrice ?? '')
+    setMaxPrice(params.maxPrice ?? '')
+  }, [params.minPrice, params.maxPrice])
 
-    return () => clearTimeout(timeoutId)
-  }, [filters, onFiltersChange])
+  const activeFilterCount = FILTER_KEYS.filter((key) => params[key]).length
+  const clearFiltersHref = productsHref(params, Object.fromEntries(FILTER_KEYS.map((key) => [key, undefined])))
 
-  const updateFilter = (key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+  const navigate = (updates: Record<string, string | undefined>) => {
+    startTransition(() => router.push(productsHref(params, updates), { scroll: false }))
   }
 
-  const resetFilters = () => {
-    setFilters({
-      search: '',
-      category: '',
-      minPrice: 0,
-      maxPrice: 10000,
-      minRating: 0,
-      sortBy: 'newest',
-      inStock: false,
+  const handlePriceSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    const [low, high] = [minPrice, maxPrice].map((value) => (value === '' ? undefined : Number(value)))
+    // A reversed range is almost always a typo: swap it rather than return nothing
+    const isReversed = low !== undefined && high !== undefined && low > high
+    navigate({
+      minPrice: (isReversed ? high : low)?.toString(),
+      maxPrice: (isReversed ? low : high)?.toString(),
     })
   }
 
-  const hasActiveFilters = filters.category || filters.minPrice > 0 || filters.maxPrice < 10000 || 
-                          filters.minRating > 0 || filters.inStock
-
   return (
-    <div className={`bg-white border rounded-lg ${isOpen ? 'block' : 'hidden'} lg:block`}>
-      <div className="p-4 border-b flex items-center justify-between">
-        <h3 className="font-semibold flex items-center">
-          <Filter className="w-4 h-4 mr-2" />
-          Filters
-        </h3>
-        <div className="flex space-x-2">
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={resetFilters}>
-              <X className="w-4 h-4 mr-1" />
-              Clear
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={onToggle} className="lg:hidden">
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="p-4 space-y-6">
-        {/* Search */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search Products
-          </label>
-          <Input
-            type="text"
-            placeholder="Search by name or description..."
-            value={filters.search}
-            onChange={(e) => updateFilter('search', e.target.value)}
-          />
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
+    <>
+      <div className="mb-8 flex items-center justify-between gap-4 border-y border-border py-3">
+        <Button
+          variant="outline"
+          size="sm"
+          className="lg:hidden"
+          onClick={() => setIsPanelOpen(!isPanelOpen)}
+          aria-expanded={isPanelOpen}
+        >
+          <SlidersHorizontal className="mr-2 h-4 w-4" />
+          Filters{activeFilterCount > 0 && ` (${activeFilterCount})`}
+        </Button>
+        <p className="hidden text-sm text-muted-foreground lg:block">
+          {total} {total === 1 ? 'product' : 'products'}
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="hidden text-muted-foreground sm:inline">Sort by</span>
           <select
-            value={filters.category}
-            onChange={(e) => updateFilter('category', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            value={params.sort ?? 'newest'}
+            onChange={(event) => navigate({ sort: event.target.value === 'newest' ? undefined : event.target.value })}
+            className="h-9 rounded-full border border-input bg-white pl-3 pr-8 text-sm"
           >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
+            {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
             ))}
           </select>
-        </div>
+        </label>
+      </div>
 
-        {/* Price Range */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Price Range
-          </label>
-          <div className="space-y-2">
-            <div className="flex space-x-2">
-              <Input
-                type="number"
-                placeholder="Min"
-                value={filters.minPrice || ''}
-                onChange={(e) => updateFilter('minPrice', Number(e.target.value) || 0)}
-                min="0"
-              />
-              <Input
-                type="number"
-                placeholder="Max"
-                value={filters.maxPrice === 10000 ? '' : filters.maxPrice}
-                onChange={(e) => updateFilter('maxPrice', Number(e.target.value) || 10000)}
-                min="0"
-              />
+      <div className="lg:grid lg:grid-cols-[14rem_1fr] lg:gap-12">
+        <aside className={cn('mb-10 space-y-8 lg:mb-0 lg:block', isPanelOpen ? 'block' : 'hidden')}>
+          <form onSubmit={handlePriceSubmit} className="space-y-3">
+            <h2 className="font-sans text-sm font-semibold">Price</h2>
+            <div className="flex items-center gap-2">
+              <Input type="number" min="0" inputMode="numeric" placeholder="Min" aria-label="Minimum price" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} />
+              <span className="text-muted-foreground">-</span>
+              <Input type="number" min="0" inputMode="numeric" placeholder="Max" aria-label="Maximum price" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} />
             </div>
-            <div className="text-xs text-gray-500">
-              ${filters.minPrice} - ${filters.maxPrice === 10000 ? '∞' : filters.maxPrice}
-            </div>
-          </div>
-        </div>
+            <Button type="submit" variant="outline" size="sm" className="w-full">Apply price</Button>
+          </form>
 
-        {/* Rating */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Minimum Rating
-          </label>
-          <div className="space-y-2">
-            <StarRating 
-              rating={filters.minRating} 
-              interactive 
-              onRatingChange={(rating) => updateFilter('minRating', rating)}
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => updateFilter('minRating', 0)}
-              className="text-xs"
-            >
-              Clear rating filter
-            </Button>
-          </div>
-        </div>
+          <fieldset className="space-y-2">
+            <legend className="mb-3 text-sm font-semibold">Customer rating</legend>
+            {RATING_OPTIONS.map((option) => (
+              <label key={option.label} className="flex cursor-pointer items-center gap-3 text-sm">
+                <input
+                  type="radio"
+                  name="minRating"
+                  checked={(params.minRating ?? '') === option.value}
+                  onChange={() => navigate({ minRating: option.value || undefined })}
+                  className="h-4 w-4 accent-primary"
+                />
+                {option.label}
+              </label>
+            ))}
+          </fieldset>
 
-        {/* Sort By */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Sort By
-          </label>
-          <select
-            value={filters.sortBy}
-            onChange={(e) => updateFilter('sortBy', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Highest Rated</option>
-            <option value="name">Name A-Z</option>
-          </select>
-        </div>
+          <fieldset>
+            <legend className="mb-3 text-sm font-semibold">Availability</legend>
+            <label className="flex cursor-pointer items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={params.inStock === 'true'}
+                onChange={(event) => navigate({ inStock: event.target.checked ? 'true' : undefined })}
+                className="h-4 w-4 rounded accent-primary"
+              />
+              In stock only
+            </label>
+          </fieldset>
 
-        {/* Stock Filter */}
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="inStock"
-            checked={filters.inStock}
-            onChange={(e) => updateFilter('inStock', e.target.checked)}
-            className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-          />
-          <label htmlFor="inStock" className="ml-2 text-sm text-gray-700">
-            In Stock Only
-          </label>
+          {activeFilterCount > 0 && (
+            <Link href={clearFiltersHref} scroll={false} className="block text-sm font-medium underline underline-offset-4">
+              Clear all filters
+            </Link>
+          )}
+        </aside>
+
+        <div className={cn('transition-opacity', isPending && 'opacity-50')} aria-busy={isPending}>
+          {children}
         </div>
       </div>
-    </div>
+    </>
   )
 }

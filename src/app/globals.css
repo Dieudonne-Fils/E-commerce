@@ -18,15 +18,11 @@
   }
 }
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 249, 250, 251;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+@layer base {
+  h1,
+  h2 {
+    @apply font-serif tracking-tight;
+  }
 }
 
 /* Smooth scrolling */
@@ -34,9 +30,9 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Focus styles for accessibility */
-*:focus {
-  outline: 2px solid hsl(221.2 83.2% 53.3%);
+/* Focus styles for accessibility: keyboard focus only, so clicks do not leave a ring behind */
+*:focus-visible {
+  outline: 2px solid theme('colors.ring');
   outline-offset: 2px;
 }
 

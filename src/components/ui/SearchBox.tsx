@@ -37,11 +37,6 @@ export function SearchBox({ onClose }: SearchBoxProps) {
     }
   }, [])
 
-  // Focus input when component mounts
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
   // Search function
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -168,7 +163,7 @@ export function SearchBox({ onClose }: SearchBoxProps) {
       {/* Search Input */}
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <input
             ref={inputRef}
             type="text"
@@ -176,8 +171,8 @@ export function SearchBox({ onClose }: SearchBoxProps) {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
-            placeholder="Search products, categories..."
-            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+            placeholder="Search products"
+            className="w-full h-10 pl-10 pr-10 text-sm bg-secondary border border-transparent rounded-full placeholder:text-muted-foreground focus:bg-white focus:border-input focus:outline-none transition-colors"
           />
           {query && (
             <button
@@ -185,7 +180,7 @@ export function SearchBox({ onClose }: SearchBoxProps) {
               onClick={clearSearch}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -193,7 +188,7 @@ export function SearchBox({ onClose }: SearchBoxProps) {
 
       {/* Search Results Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-border rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto">
           {loading && (
             <div className="p-4 text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>

@@ -1,15 +1,22 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Fraunces, Inter } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
+import { siteConfig } from '@/lib/site'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-serif' })
 
 export const metadata: Metadata = {
-  title: 'E-Commerce Store',
-  description: 'Modern e-commerce application built with Next.js',
+  title: {
+    default: `${siteConfig.name} | ${siteConfig.tagline}`,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
 }
 
 export default function RootLayout({
@@ -18,12 +25,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
+      <body className="bg-background font-sans text-foreground antialiased">
         <AuthProvider>
           <CartProvider>
-            {children}
-            <Toaster position="top-right" />
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <div className="flex-1">{children}</div>
+              <Footer />
+            </div>
+            <Toaster
+              position="bottom-center"
+              toastOptions={{ className: '!rounded-full !bg-primary !text-primary-foreground !text-sm' }}
+            />
           </CartProvider>
         </AuthProvider>
       </body>

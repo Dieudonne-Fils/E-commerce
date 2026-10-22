@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Package, MapPin, Calendar, ArrowLeft, Truck } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Loading } from '@/components/ui/Loading'
 import { useAuth } from '@/contexts/AuthContext'
@@ -48,7 +47,6 @@ export default function OrderDetailsPage() {
   if (!user) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Package className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -66,7 +64,6 @@ export default function OrderDetailsPage() {
   if (loading) {
     return (
       <div>
-        <Header />
         <Loading text="Loading order details..." />
       </div>
     )
@@ -75,7 +72,6 @@ export default function OrderDetailsPage() {
   if (!order) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <Package className="h-24 w-24 mx-auto text-gray-300 mb-4" />
@@ -127,7 +123,6 @@ export default function OrderDetailsPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

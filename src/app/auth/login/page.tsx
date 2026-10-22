@@ -1,14 +1,17 @@
+import type { Metadata } from 'next'
+import { AuthShell } from '@/components/auth/AuthShell'
 import { LoginForm } from '@/components/auth/LoginForm'
-import { Header } from '@/components/layout/Header'
+
+export const metadata: Metadata = { title: 'Sign in' }
 
 export default function LoginPage() {
   return (
-    <div>
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Sign In</h1>
-        <LoginForm />
-      </main>
-    </div>
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to check out faster, track your orders and keep a wishlist."
+      image="/images/products/linen-bedding-set.jpg"
+    >
+      <LoginForm />
+    </AuthShell>
   )
 }

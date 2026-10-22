@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Eye, Package, Truck, CheckCircle, XCircle, Clock, Filter, Search, Download } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { AnimatedElement } from '@/components/ui/AnimatedComponents'
@@ -174,7 +173,6 @@ export default function AdminOrdersPage() {
   if (!user || user.role !== 'ADMIN') {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
@@ -190,7 +188,6 @@ export default function AdminOrdersPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

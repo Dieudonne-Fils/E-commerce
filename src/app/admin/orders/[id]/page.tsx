@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, User, MapPin, CreditCard, Calendar } from 'lucide-react'
-import { Header } from '@/components/layout/Header'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { AnimatedElement } from '@/components/ui/AnimatedComponents'
@@ -137,7 +136,6 @@ export default function OrderDetailsPage() {
   if (!user || user.role !== 'ADMIN') {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
@@ -154,7 +152,6 @@ export default function OrderDetailsPage() {
   if (loading) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse">
@@ -177,7 +174,6 @@ export default function OrderDetailsPage() {
   if (!order) {
     return (
       <div>
-        <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -198,7 +194,6 @@ export default function OrderDetailsPage() {
 
   return (
     <div>
-      <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

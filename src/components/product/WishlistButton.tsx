@@ -8,10 +8,9 @@ import toast from 'react-hot-toast'
 
 interface WishlistButtonProps {
   productId: string
-  size?: 'sm' | 'lg'
 }
 
-export function WishlistButton({ productId, size = 'lg' }: WishlistButtonProps) {
+export function WishlistButton({ productId }: WishlistButtonProps) {
   const [isInWishlist, setIsInWishlist] = useState(false)
   const [loading, setLoading] = useState(false)
   const { user, token } = useAuth()
@@ -95,13 +94,15 @@ export function WishlistButton({ productId, size = 'lg' }: WishlistButtonProps) 
   return (
     <Button
       variant="outline"
-      size={size}
+      size="icon"
       onClick={toggleWishlist}
       disabled={loading}
-      className={`w-14 ${isInWishlist ? 'text-red-600 border-red-300 hover:bg-red-50' : ''}`}
+      aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+      aria-pressed={isInWishlist}
+      className={`h-12 w-12 shrink-0 ${isInWishlist ? 'text-clay-600 border-clay-500 hover:bg-clay-50' : ''}`}
     >
       <Heart 
-        className={`h-5 w-5 ${isInWishlist ? 'fill-red-600' : ''}`} 
+        className={`h-5 w-5 ${isInWishlist ? 'fill-clay-600' : ''}`} 
       />
     </Button>
   )
