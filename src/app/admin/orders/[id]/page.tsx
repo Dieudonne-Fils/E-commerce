@@ -11,6 +11,7 @@ import { AnimatedElement } from '@/components/ui/AnimatedComponents'
 import { useAuth } from '@/contexts/AuthContext'
 import { Order, OrderStatus, OrderStatusHistory } from '@/types'
 import toast from 'react-hot-toast'
+import { formatPrice } from '@/lib/utils'
 
 const statusConfig = {
   PENDING: { 
@@ -288,10 +289,10 @@ export default function OrderDetailsPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-900">
-                          ${Number(item.price).toFixed(2)}
+                          {formatPrice(Number(item.price))}
                         </p>
                         <p className="text-sm text-gray-500">
-                          ${(Number(item.price) * item.quantity).toFixed(2)} total
+                          {formatPrice(Number(item.price) * item.quantity)} total
                         </p>
                       </div>
                     </div>
@@ -311,7 +312,7 @@ export default function OrderDetailsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Items ({order.items?.length || 0})</span>
-                    <span className="font-semibold">${Number(order.total).toFixed(2)}</span>
+                    <span className="font-semibold">{formatPrice(Number(order.total))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
@@ -321,7 +322,7 @@ export default function OrderDetailsPage() {
                     <div className="flex justify-between">
                       <span className="font-semibold text-lg">Total</span>
                       <span className="font-bold text-lg text-primary-600">
-                        ${Number(order.total).toFixed(2)}
+                        {formatPrice(Number(order.total))}
                       </span>
                     </div>
                   </div>

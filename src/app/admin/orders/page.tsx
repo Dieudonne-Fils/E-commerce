@@ -11,6 +11,7 @@ import { AnimatedElement } from '@/components/ui/AnimatedComponents'
 import { useAuth } from '@/contexts/AuthContext'
 import { Order, OrderStatus } from '@/types'
 import toast from 'react-hot-toast'
+import { formatPrice } from '@/lib/utils'
 
 const statusConfig = {
   PENDING: { 
@@ -336,7 +337,7 @@ export default function AdminOrdersPage() {
                             </Badge>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-semibold">
-                            ${Number(order.total).toFixed(2)}
+                            {formatPrice(Number(order.total))}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(order.createdAt).toLocaleDateString()}

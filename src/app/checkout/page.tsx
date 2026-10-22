@@ -10,6 +10,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 export default function CheckoutPage() {
   const { items, getCartTotal, clearCart } = useCart()
@@ -258,7 +259,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        ${(Number(item.product?.price || 0) * item.quantity).toFixed(2)}
+                        {formatPrice(Number(item.product?.price || 0) * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -268,7 +269,7 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -276,12 +277,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{formatPrice(tax)}</span>
                 </div>
                 <hr />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
               </div>
               

@@ -5,6 +5,7 @@ import { ProductReviews } from '@/components/product/ProductReviews'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { StarRating } from '@/components/ui/StarRating'
 import { Badge } from '@/components/ui/Badge'
+import { formatPrice } from '@/lib/utils'
 
 async function getProduct(id: string) {
   const response = await fetch(`http://localhost:3000/api/products/${id}`, {
@@ -106,7 +107,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-4xl font-bold text-primary-600">
-                    ${Number(product.price).toFixed(2)}
+                    {formatPrice(Number(product.price))}
                   </span>
                   <div className="text-sm text-gray-500 mt-1">
                     Free shipping included

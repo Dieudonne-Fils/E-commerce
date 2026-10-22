@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Loading } from '@/components/ui/Loading'
 import { useAuth } from '@/contexts/AuthContext'
 import { Order } from '@/types'
+import { formatPrice } from '@/lib/utils'
 
 export default function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null)
@@ -216,7 +217,7 @@ export default function OrderDetailsPage() {
                           {item.product?.name || 'Unknown Product'}
                         </h3>
                         <p className="text-gray-600">
-                          ${Number(item.price).toFixed(2)} × {item.quantity}
+                          {formatPrice(Number(item.price))} × {item.quantity}
                         </p>
                         {item.product?.category && (
                           <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs mt-1">
@@ -227,7 +228,7 @@ export default function OrderDetailsPage() {
                       
                       <div className="text-right">
                         <p className="font-bold text-lg">
-                          ${(Number(item.price) * item.quantity).toFixed(2)}
+                          {formatPrice(Number(item.price) * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -244,7 +245,7 @@ export default function OrderDetailsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${Number(order.total).toFixed(2)}</span>
+                    <span>{formatPrice(Number(order.total))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -252,12 +253,12 @@ export default function OrderDetailsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${(Number(order.total) * 0.1).toFixed(2)}</span>
+                    <span>{formatPrice(Number(order.total) * 0.1)}</span>
                   </div>
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span>${(Number(order.total) * 1.1).toFixed(2)}</span>
+                    <span>{formatPrice(Number(order.total) * 1.1)}</span>
                   </div>
                 </div>
               </div>

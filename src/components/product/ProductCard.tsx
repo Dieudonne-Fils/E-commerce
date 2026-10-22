@@ -7,6 +7,7 @@ import { Product } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { StarRating } from '@/components/ui/StarRating'
 import { useCart } from '@/contexts/CartContext'
+import { formatPrice } from '@/lib/utils'
 
 interface ProductCardProps {
   product: Product
@@ -70,7 +71,7 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold text-primary-600">
-            ${Number(product.price).toFixed(2)}
+            {formatPrice(Number(product.price))}
           </span>
           <span className={`text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}

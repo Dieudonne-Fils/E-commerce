@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Order } from '@/types'
 import { Package, User, Calendar, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { user, token } = useAuth()
@@ -144,7 +145,7 @@ export default function ProfilePage() {
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold">${Number(order.total).toFixed(2)}</div>
+                        <div className="text-xl font-bold">{formatPrice(Number(order.total))}</div>
                         <div className="text-sm text-gray-600">
                           {order.items?.length || 0} item(s)
                         </div>
@@ -168,7 +169,7 @@ export default function ProfilePage() {
                                 {item.product?.name} × {item.quantity}
                               </span>
                               <span className="text-sm font-medium">
-                                ${(Number(item.price) * item.quantity).toFixed(2)}
+                                {formatPrice(Number(item.price) * item.quantity)}
                               </span>
                             </div>
                           ))}

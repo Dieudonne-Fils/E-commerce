@@ -5,6 +5,7 @@ import { Search, X, Clock, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { Product } from '@/types'
 import { useDebounce } from '@/hooks/useDebounce'
+import { formatPrice } from '@/lib/utils'
 
 interface SearchBoxProps {
   onClose?: () => void
@@ -255,7 +256,7 @@ export function SearchBox({ onClose }: SearchBoxProps) {
                             {product.name}
                           </h4>
                           <p className="text-sm text-primary-600 font-semibold">
-                            ${Number(product.price).toFixed(2)}
+                            {formatPrice(Number(product.price))}
                           </p>
                         </div>
                       </Link>

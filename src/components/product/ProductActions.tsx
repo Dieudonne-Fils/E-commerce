@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { Product } from '@/types'
 import toast from 'react-hot-toast'
+import { formatPrice } from '@/lib/utils'
 
 interface ProductActionsProps {
   product: Product
@@ -131,7 +132,7 @@ export function ProductActions({ product }: ProductActionsProps) {
         <div className="flex justify-between items-center">
           <span className="text-lg font-medium">Total:</span>
           <span className="text-2xl font-bold text-primary-600">
-            ${(Number(product.price) * quantity).toFixed(2)}
+            {formatPrice(Number(product.price) * quantity)}
           </span>
         </div>
       </div>

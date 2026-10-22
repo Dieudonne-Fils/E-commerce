@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Product, Order, User } from '@/types'
 import { Package, Users, ShoppingCart, TrendingUp, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 export default function AdminPage() {
   const { user, token } = useAuth()
@@ -177,7 +178,7 @@ export default function AdminPage() {
                     <div className="ml-4">
                       <p className="text-sm text-gray-600">Total Revenue</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        ${stats.totalRevenue.toFixed(2)}
+                        {formatPrice(stats.totalRevenue)}
                       </p>
                     </div>
                   </div>
@@ -258,7 +259,7 @@ export default function AdminPage() {
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              ${Number(order.total).toFixed(2)}
+                              {formatPrice(Number(order.total))}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                               <Button variant="outline" size="sm">
