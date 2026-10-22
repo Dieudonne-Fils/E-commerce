@@ -66,7 +66,7 @@ npm run docker:db
 ```bash
 npm install
 npm run db:generate
-npm run db:push
+npm run db:migrate
 npm run db:seed
 ```
 
@@ -102,7 +102,7 @@ npm install
 4. Set up the database:
 ```bash
 npm run db:generate
-npm run db:push
+npm run db:migrate
 npm run db:seed
 ```
 
@@ -196,6 +196,15 @@ src/
 │   └── ui/             # UI components
 ├── lib/                # Utility functions
 └── types/              # TypeScript type definitions
+```
+
+## Catalog Data
+
+The SQL migrations in `prisma/migrations/` create the product catalog (4 categories, 24 products). Product images live in `public/images/products/` (photos from [Unsplash](https://unsplash.com/license)).
+
+To rebuild your local database from scratch (drops all data, applies migrations, then runs the seed):
+```bash
+npm run db:reset
 ```
 
 ## Default Admin User

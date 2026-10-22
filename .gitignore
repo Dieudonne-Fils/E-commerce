@@ -54,9 +54,6 @@ next-env.d.ts
 ehthumbs.db
 Thumbs.db
 
-# Prisma
-/prisma/migrations/
-
 # Logs
 logs
 *.log
